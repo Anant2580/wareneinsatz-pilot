@@ -1,0 +1,207 @@
+"""Database tables (SQLAlchemy 2 ORM). The Alembic migrations in migrations/versions/ create them.
+
+Step 1 covers the invoice side: suppliers, documents (uploaded files), invoices,
+their VAT breakdown and invoice lines. Ingredients, recipes and alerts follow
+in later migrations (see docs/schema.md).
+"""
+
+from __future__ import annotations
+
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any
+
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Identity,
+    Integer,
+    MetaData,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+# Fixed names for constraints and indexes. Migrations stay predictable, and the repository
+# can tell from the name which unique constraint was violated (e.g. "uq_documents_sha256").
+NAMING_CONVENTION = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_N_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+
+# Money is never stored as float: NUMERIC is exact, and Python reads it as Decimal.
+MONEY = Numeric(14, 2)
+UNIT_PRICE = Numeric(18, 6)
+QUANTITY = Numeric(18, 4)
+RATE = Numeric(5, 2)
+
+
+class Base(DeclarativeBase):
+    metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+class Supplier(Base):
+    """A wholesaler, cash & carry market or shop that sends invoices (EN 16931 BG-4 Seller)."""
+
+    __tablename__ = "suppliers"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    # Normalised name ("metro deutschland gmbh"), used to recognise a supplier that has no VAT ID on the document.
+    name_key: Mapped[str] = mapped_column(Text, unique=True)
+    # USt-IdNr. NULLs never collide in a PostgreSQL unique constraint, so suppliers without one are fine.
+    vat_id: Mapped[str | None] = mapped_column(Text, unique=True)
+    tax_number: Mapped[str | None] = mapped_column(Text)
+    street: Mapped[str | None] = mapped_column(Text)
+    postcode: Mapped[str | None] = mapped_column(Text)
+    city: Mapped[str | None] = mapped_column(Text)
+    country_code: Mapped[str] = mapped_column(String(2), server_default="DE")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    invoices: Mapped[list[Invoice]] = relationship(back_populates="supplier")
+
+
+class Document(Base):
+    """An uploaded file (XML, PDF or photo) and what the pipeline did with it."""
+
+    __tablename__ = "documents"
+    __table_args__ = (
+        CheckConstraint("status IN ('received', 'extracted', 'failed')", name="status"),
+        CheckConstraint("sha256 ~ '^[0-9a-f]{64}$'", name="sha256_hex"),
+        CheckConstraint("size_bytes >= 0", name="size_non_negative"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    # SHA-256 of the file content: the same file uploaded twice is recognised and rejected.
+    sha256: Mapped[str] = mapped_column(String(64), unique=True)
+    filename: Mapped[str] = mapped_column(Text)
+    media_type: Mapped[str] = mapped_column(Text)  # application/xml, application/pdf, image/jpeg ...
+    size_bytes: Mapped[int] = mapped_column(BigInteger)
+    storage_path: Mapped[str | None] = mapped_column(Text)  # where the original file is kept (step 2)
+    status: Mapped[str] = mapped_column(String(20), server_default="received")
+    extraction_method: Mapped[str | None] = mapped_column(Text)  # e.g. "xrechnung-cii", "ocr+llm"
+    extraction_ms: Mapped[int | None] = mapped_column(Integer)  # processing time per document, for the evaluation
+    # The extractor's output before any human correction. Comparing it with the approved
+    # invoice shows how accurate the extraction was.
+    raw_extraction: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    error: Mapped[str | None] = mapped_column(Text)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    # The invoice belongs to its document: deleting the document deletes the invoice and its lines.
+    invoice: Mapped[Invoice | None] = relationship(
+        back_populates="document", cascade="all, delete-orphan", passive_deletes=True
+    )
+
+
+class Invoice(Base):
+    """The business content of a document: header and totals (EN 16931)."""
+
+    __tablename__ = "invoices"
+    __table_args__ = (
+        # The same invoice can't be booked twice, even if it arrives as PDF and as XML.
+        UniqueConstraint("supplier_id", "invoice_number"),
+        CheckConstraint("document_type IN ('invoice', 'credit_note')", name="document_type"),
+        CheckConstraint("status IN ('needs_review', 'approved', 'rejected')", name="status"),
+        CheckConstraint("currency ~ '^[A-Z]{3}$'", name="currency_iso"),
+        CheckConstraint("allowance_total >= 0 AND charge_total >= 0", name="allowance_charge_non_negative"),
+        # Price history needs a date, so an invoice can only be approved once its date is known.
+        CheckConstraint(
+            "status <> 'approved' OR (issue_date IS NOT NULL AND approved_at IS NOT NULL)",
+            name="approved_has_date",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), unique=True)
+    supplier_id: Mapped[int] = mapped_column(ForeignKey("suppliers.id", ondelete="RESTRICT"), index=True)
+    document_type: Mapped[str] = mapped_column(String(20), server_default="invoice")
+    invoice_number: Mapped[str | None] = mapped_column(Text)
+    issue_date: Mapped[date | None] = mapped_column(Date, index=True)
+    delivery_date: Mapped[date | None] = mapped_column(Date)
+    currency: Mapped[str] = mapped_column(String(3), server_default="EUR")
+    prices_include_vat: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    allowance_total: Mapped[Decimal] = mapped_column(MONEY, server_default=text("0"))
+    charge_total: Mapped[Decimal] = mapped_column(MONEY, server_default=text("0"))
+    net_total: Mapped[Decimal | None] = mapped_column(MONEY)
+    vat_total: Mapped[Decimal | None] = mapped_column(MONEY)
+    gross_total: Mapped[Decimal] = mapped_column(MONEY)
+    status: Mapped[str] = mapped_column(String(20), server_default="needs_review")
+    # Findings of the validation step (step 3), shown on the review screen.
+    review_issues: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    document: Mapped[Document] = relationship(back_populates="invoice")
+    supplier: Mapped[Supplier] = relationship(back_populates="invoices")
+    lines: Mapped[list[InvoiceLine]] = relationship(
+        back_populates="invoice", cascade="all, delete-orphan", passive_deletes=True, order_by="InvoiceLine.line_no"
+    )
+    tax_totals: Mapped[list[InvoiceTaxTotal]] = relationship(
+        back_populates="invoice",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="InvoiceTaxTotal.vat_rate",
+    )
+
+
+class InvoiceTaxTotal(Base):
+    """VAT breakdown (EN 16931 BG-23): net amount and VAT per rate. Used to check the totals."""
+
+    __tablename__ = "invoice_tax_totals"
+    __table_args__ = (
+        UniqueConstraint("invoice_id", "vat_rate"),
+        CheckConstraint("vat_rate >= 0 AND vat_rate < 100", name="vat_rate_range"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    invoice_id: Mapped[int] = mapped_column(ForeignKey("invoices.id", ondelete="CASCADE"))
+    vat_rate: Mapped[Decimal] = mapped_column(RATE)
+    taxable_amount: Mapped[Decimal] = mapped_column(MONEY)
+    tax_amount: Mapped[Decimal] = mapped_column(MONEY)
+
+    invoice: Mapped[Invoice] = relationship(back_populates="tax_totals")
+
+
+class InvoiceLine(Base):
+    """One invoice line (EN 16931 BG-25), stored exactly as printed on the document."""
+
+    __tablename__ = "invoice_lines"
+    __table_args__ = (
+        UniqueConstraint("invoice_id", "line_no"),
+        CheckConstraint("line_no >= 1", name="line_no_positive"),
+        CheckConstraint("unit_price >= 0", name="unit_price_non_negative"),
+        CheckConstraint("price_base_quantity > 0", name="price_base_quantity_positive"),
+        CheckConstraint("vat_rate IS NULL OR (vat_rate >= 0 AND vat_rate < 100)", name="vat_rate_range"),
+        CheckConstraint("confidence IS NULL OR (confidence >= 0 AND confidence <= 1)", name="confidence_range"),
+        CheckConstraint("gtin IS NULL OR gtin ~ '^([0-9]{8}|[0-9]{12,14})$'", name="gtin_format"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    invoice_id: Mapped[int] = mapped_column(ForeignKey("invoices.id", ondelete="CASCADE"))
+    line_no: Mapped[int] = mapped_column(Integer)
+    description: Mapped[str] = mapped_column(Text)
+    seller_article_no: Mapped[str | None] = mapped_column(Text)
+    gtin: Mapped[str | None] = mapped_column(Text)
+    quantity: Mapped[Decimal] = mapped_column(QUANTITY)
+    unit_code: Mapped[str | None] = mapped_column(Text)  # not a foreign key: unknown units are flagged, not rejected
+    unit_raw: Mapped[str | None] = mapped_column(Text)
+    unit_price: Mapped[Decimal] = mapped_column(UNIT_PRICE)
+    price_base_quantity: Mapped[Decimal] = mapped_column(QUANTITY, server_default=text("1"))
+    line_amount: Mapped[Decimal] = mapped_column(MONEY)
+    vat_rate: Mapped[Decimal | None] = mapped_column(RATE)
+    confidence: Mapped[float | None] = mapped_column(Float)
+
+    invoice: Mapped[Invoice] = relationship(back_populates="lines")

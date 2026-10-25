@@ -1,0 +1,19 @@
+# Secrets and local settings
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+build/
+dist/
+
+# Tools
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Uploaded documents and private test data (real receipts, employer data) never go into git
+data/documents/
+data/private/

@@ -1,0 +1,105 @@
+{
+  "document_type": "invoice",
+  "invoice_number": "RE-2026-104233",
+  "issue_date": "2026-10-20",
+  "delivery_date": "2026-10-20",
+  "currency": "EUR",
+  "prices_include_vat": false,
+  "supplier": {
+    "name": "Musterfrisch Großhandel GmbH",
+    "vat_id": "DE 123 456 789",
+    "tax_number": null,
+    "street": "Musterstraße 1",
+    "postcode": "39104",
+    "city": "Magdeburg",
+    "country_code": "DE"
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "description": "Rinderhackfleisch frisch, 20 % Fett",
+      "seller_article_no": "100245",
+      "quantity": "10",
+      "unit_code": "KGM",
+      "unit_raw": "kg",
+      "unit_price": "9.89",
+      "line_amount": "98.90",
+      "vat_rate": "7"
+    },
+    {
+      "line_no": 2,
+      "description": "Brioche Burger Buns 80 g, 24 Stk/Krt",
+      "seller_article_no": "200310",
+      "quantity": "3",
+      "unit_code": "XCT",
+      "unit_raw": "Krt",
+      "unit_price": "11.49",
+      "line_amount": "34.47",
+      "vat_rate": "7"
+    },
+    {
+      "line_no": 3,
+      "description": "Cheddar Scheiben 1 kg",
+      "seller_article_no": "300118",
+      "quantity": "4",
+      "unit_code": "H87",
+      "unit_raw": "St",
+      "unit_price": "8.99",
+      "line_amount": "35.96",
+      "vat_rate": "7"
+    },
+    {
+      "line_no": 4,
+      "description": "Pommes Frites TK 10 mm, 4 x 2,5 kg",
+      "seller_article_no": "400502",
+      "quantity": "2",
+      "unit_code": "XCT",
+      "unit_raw": "Krt",
+      "unit_price": "19.90",
+      "line_amount": "39.80",
+      "vat_rate": "7"
+    },
+    {
+      "line_no": 5,
+      "description": "Rapsöl 10 l Kanister",
+      "seller_article_no": "500077",
+      "quantity": "2",
+      "unit_code": "H87",
+      "unit_raw": "St",
+      "unit_price": "16.49",
+      "line_amount": "32.98",
+      "vat_rate": "7"
+    },
+    {
+      "line_no": 6,
+      "description": "Cola 0,33 l Glas, Kiste 24 Fl.",
+      "seller_article_no": "600230",
+      "quantity": "2",
+      "unit_code": "XCR",
+      "unit_raw": "Ki",
+      "unit_price": "14.90",
+      "line_amount": "29.80",
+      "vat_rate": "19"
+    },
+    {
+      "line_no": 7,
+      "description": "Pfand Kiste 24 x 0,33 l",
+      "seller_article_no": "990024",
+      "quantity": "2",
+      "unit_code": "XCR",
+      "unit_raw": "Ki",
+      "unit_price": "3.42",
+      "line_amount": "6.84",
+      "vat_rate": "19"
+    }
+  ],
+  "vat_breakdown": [
+    { "vat_rate": "7", "taxable_amount": "242.11", "tax_amount": "16.95" },
+    { "vat_rate": "19", "taxable_amount": "36.64", "tax_amount": "6.96" }
+  ],
+  "allowance_total": "0.00",
+  "charge_total": "0.00",
+  "net_total": "278.75",
+  "vat_total": "23.91",
+  "gross_total": "302.66"
+}

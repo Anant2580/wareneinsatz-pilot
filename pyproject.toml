@@ -1,0 +1,44 @@
+# Project definition. Dependencies are installed with uv; exact versions are pinned in uv.lock.
+[project]
+name = "wareneinsatz-pilot"
+version = "0.1.0"
+description = "Food-cost copilot for restaurants: supplier invoices in, ingredient prices and dish margins out."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Anant Sharma" }]
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.20",          # database migrations
+    "psycopg[binary]>=3.3",   # PostgreSQL driver
+    "pydantic>=2.14",         # canonical invoice schema and validation
+    "pydantic-settings>=2.16", # configuration from environment variables / .env
+    "sqlalchemy>=2.1",        # ORM and SQL toolkit
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1",
+    "ruff>=0.17",
+]
+
+[build-system]
+requires = ["hatchling>=1.32"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wareneinsatz"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, bugbear, import sorting, pyupgrade, simplify
+select = ["E", "F", "W", "B", "I", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Import the code straight from src/, so tests never depend on how the package was installed
+pythonpath = ["src"]
+addopts = "-ra"

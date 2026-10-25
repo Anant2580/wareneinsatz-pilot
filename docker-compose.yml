@@ -1,0 +1,28 @@
+# Local development database. A Compose project of its own (name below), so it never
+# touches the containers or volumes of other projects on the same machine.
+name: wareneinsatz-pilot
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wareneinsatz}
+      POSTGRES_USER: ${POSTGRES_USER:-wareneinsatz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wareneinsatz}
+      TZ: Europe/Berlin
+    ports:
+      # Host port 5433, so it can run next to another PostgreSQL on 5432.
+      # Bound to 127.0.0.1: only reachable from this machine.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data          # data survives restarts
+      - ./db/init:/docker-entrypoint-initdb.d:ro  # first start only: creates the test database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wareneinsatz} -d ${POSTGRES_DB:-wareneinsatz}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
