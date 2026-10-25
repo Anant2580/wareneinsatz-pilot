@@ -4,7 +4,9 @@
 # Python
 __pycache__/
 *.pyc
-.venv/
+# .venv may be a symlink to .venv.nosync (keeps the environment out of iCloud sync on macOS)
+.venv
+*.nosync/
 *.egg-info/
 build/
 dist/
