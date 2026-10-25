@@ -69,7 +69,7 @@ def test_supplier_name_is_required(invoice_dict):
     ("field", "value"),
     [
         ("line_amount", "98.905"),  # amounts have at most 2 decimals; the database would round silently
-        ("unit_price", "9.8912345"),  # unit prices at most 6
+        ("unit_price", "0.06123237412"),  # unit prices at most 10
         ("quantity", "10.00001"),  # quantities at most 4
     ],
 )
@@ -168,3 +168,9 @@ def test_json_round_trip_is_lossless(invoice):
     as_json = invoice.model_dump(mode="json")
     assert as_json["gross_total"] == "302.66"
     assert InvoiceData.model_validate(as_json) == invoice
+
+
+def test_negative_allowance_total_is_accepted(invoice_dict):
+    """Correction invoices reverse every amount, so document-level totals can be negative (migration 0002)."""
+    invoice_dict["allowance_total"] = "-0.23"
+    assert InvoiceData.model_validate(invoice_dict).allowance_total == Decimal("-0.23")

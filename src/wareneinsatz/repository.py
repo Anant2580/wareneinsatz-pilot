@@ -140,6 +140,37 @@ def save_invoice(
     return invoice
 
 
+def save_document(session: Session, meta: DocumentMeta, *, status: str, error: str | None = None) -> Document:
+    """Store a file that did not (yet) become an invoice.
+
+    status 'received': waiting for OCR + LLM extraction (scans, photos, plain PDFs).
+    status 'failed': broken or not an invoice; `error` says why.
+    Raises DuplicateDocumentError if the same file was stored before.
+    """
+    try:
+        with session.begin_nested():
+            document = Document(
+                sha256=meta.sha256,
+                filename=meta.filename,
+                media_type=meta.media_type,
+                size_bytes=meta.size_bytes,
+                storage_path=meta.storage_path,
+                status=status,
+                extraction_method=meta.extraction_method,
+                extraction_ms=meta.extraction_ms,
+                error=error,
+            )
+            session.add(document)
+            session.flush()
+    except IntegrityError as integrity_error:
+        if _violated_constraint(integrity_error) == "uq_documents_sha256":
+            raise DuplicateDocumentError(
+                f"This file is already stored (sha256 {meta.sha256[:12]}...)"
+            ) from integrity_error
+        raise
+    return document
+
+
 def _violated_constraint(error: IntegrityError) -> str | None:
     """Name of the violated constraint as reported by PostgreSQL (psycopg exposes it in .diag)."""
     diag = getattr(error.orig, "diag", None)

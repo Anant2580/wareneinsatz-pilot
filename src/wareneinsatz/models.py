@@ -44,7 +44,8 @@ NAMING_CONVENTION = {
 
 # Money is never stored as float: NUMERIC is exact, and Python reads it as Decimal.
 MONEY = Numeric(14, 2)
-UNIT_PRICE = Numeric(18, 6)
+# Unit prices may have many decimals (an official XRechnung test case uses 9), so they get 10.
+UNIT_PRICE = Numeric(20, 10)
 QUANTITY = Numeric(18, 4)
 RATE = Numeric(5, 2)
 
@@ -116,7 +117,6 @@ class Invoice(Base):
         CheckConstraint("document_type IN ('invoice', 'credit_note')", name="document_type"),
         CheckConstraint("status IN ('needs_review', 'approved', 'rejected')", name="status"),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="currency_iso"),
-        CheckConstraint("allowance_total >= 0 AND charge_total >= 0", name="allowance_charge_non_negative"),
         # Price history needs a date, so an invoice can only be approved once its date is known.
         CheckConstraint(
             "status <> 'approved' OR (issue_date IS NOT NULL AND approved_at IS NOT NULL)",

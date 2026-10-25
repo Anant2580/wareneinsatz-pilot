@@ -4,6 +4,7 @@ All configuration lives in one place, so no other module reads os.environ direct
 """
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -31,6 +32,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://wareneinsatz:wareneinsatz@localhost:5433/wareneinsatz"
     # Separate database for the tests; database tests are skipped when it is not set.
     test_database_url: str | None = None
+    # Where original files are kept (relative to the folder the app runs in). Never committed to git.
+    document_dir: Path = Path("data/documents")
 
     @field_validator("database_url", "test_database_url")
     @classmethod

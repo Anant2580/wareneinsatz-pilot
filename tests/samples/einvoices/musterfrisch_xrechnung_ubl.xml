@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic test invoice: the same invoice as musterfrisch_xrechnung_cii.xml, in UBL syntax. -->
+<ubl:Invoice xmlns:ubl="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+             xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+             xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+    <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0</cbc:CustomizationID>
+    <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>
+    <cbc:ID>RE-2026-104233</cbc:ID>
+    <cbc:IssueDate>2026-10-20</cbc:IssueDate>
+    <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+    <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+    <cbc:BuyerReference>BB-4711</cbc:BuyerReference>
+    <cac:AccountingSupplierParty>
+        <cac:Party>
+            <cbc:EndpointID schemeID="EM">rechnung@musterfrisch.example</cbc:EndpointID>
+            <cac:PostalAddress>
+                <cbc:StreetName>Musterstraße 1</cbc:StreetName>
+                <cbc:CityName>Magdeburg</cbc:CityName>
+                <cbc:PostalZone>39104</cbc:PostalZone>
+                <cac:Country>
+                    <cbc:IdentificationCode>DE</cbc:IdentificationCode>
+                </cac:Country>
+            </cac:PostalAddress>
+            <cac:PartyTaxScheme>
+                <cbc:CompanyID>DE123456789</cbc:CompanyID>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:PartyTaxScheme>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>Musterfrisch Großhandel GmbH</cbc:RegistrationName>
+            </cac:PartyLegalEntity>
+            <cac:Contact>
+                <cbc:Name>Buchhaltung</cbc:Name>
+                <cbc:Telephone>+49 391 0000000</cbc:Telephone>
+                <cbc:ElectronicMail>rechnung@musterfrisch.example</cbc:ElectronicMail>
+            </cac:Contact>
+        </cac:Party>
+    </cac:AccountingSupplierParty>
+    <cac:AccountingCustomerParty>
+        <cac:Party>
+            <cbc:EndpointID schemeID="EM">einkauf@burgerbar.example</cbc:EndpointID>
+            <cac:PostalAddress>
+                <cbc:StreetName>Beispielweg 2</cbc:StreetName>
+                <cbc:CityName>Magdeburg</cbc:CityName>
+                <cbc:PostalZone>39104</cbc:PostalZone>
+                <cac:Country>
+                    <cbc:IdentificationCode>DE</cbc:IdentificationCode>
+                </cac:Country>
+            </cac:PostalAddress>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>Beispiel-Burgerbar GmbH</cbc:RegistrationName>
+            </cac:PartyLegalEntity>
+        </cac:Party>
+    </cac:AccountingCustomerParty>
+    <cac:Delivery>
+        <cbc:ActualDeliveryDate>2026-10-20</cbc:ActualDeliveryDate>
+    </cac:Delivery>
+    <cac:PaymentMeans>
+        <cbc:PaymentMeansCode>58</cbc:PaymentMeansCode>
+        <cac:PayeeFinancialAccount>
+            <!-- not a real account: a valid-format test IBAN -->
+            <cbc:ID>DE79000000001234567890</cbc:ID>
+        </cac:PayeeFinancialAccount>
+    </cac:PaymentMeans>
+    <cac:PaymentTerms>
+        <cbc:Note>Zahlbar innerhalb von 14 Tagen ohne Abzug.</cbc:Note>
+    </cac:PaymentTerms>
+    <cac:TaxTotal>
+        <cbc:TaxAmount currencyID="EUR">23.91</cbc:TaxAmount>
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="EUR">242.11</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="EUR">16.95</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>7</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="EUR">36.64</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="EUR">6.96</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>19</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:LegalMonetaryTotal>
+        <cbc:LineExtensionAmount currencyID="EUR">278.75</cbc:LineExtensionAmount>
+        <cbc:TaxExclusiveAmount currencyID="EUR">278.75</cbc:TaxExclusiveAmount>
+        <cbc:TaxInclusiveAmount currencyID="EUR">302.66</cbc:TaxInclusiveAmount>
+        <cbc:PayableAmount currencyID="EUR">302.66</cbc:PayableAmount>
+    </cac:LegalMonetaryTotal>
+    <cac:InvoiceLine>
+        <cbc:ID>1</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="KGM">10</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="EUR">98.90</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>Rinderhackfleisch frisch, 20 % Fett</cbc:Name>
+            <cac:SellersItemIdentification>
+                <cbc:ID>100245</cbc:ID>
+            </cac:SellersItemIdentification>
+            <cac:ClassifiedTaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>7</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="EUR">9.89</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+    <cac:InvoiceLine>
+        <cbc:ID>2</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="XCT">3</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="EUR">34.47</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>Brioche Burger Buns 80 g, 24 Stk/Krt</cbc:Name>
+            <cac:SellersItemIdentification>
+                <cbc:ID>200310</cbc:ID>
+            </cac:SellersItemIdentification>
+            <cac:ClassifiedTaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>7</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="EUR">11.49</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+    <cac:InvoiceLine>
+        <cbc:ID>3</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="H87">4</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="EUR">35.96</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>Cheddar Scheiben 1 kg</cbc:Name>
+            <cac:SellersItemIdentification>
+                <cbc:ID>300118</cbc:ID>
+            </cac:SellersItemIdentification>
+            <cac:ClassifiedTaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>7</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="EUR">8.99</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+    <cac:InvoiceLine>
+        <cbc:ID>4</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="XCT">2</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="EUR">39.80</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>Pommes Frites TK 10 mm, 4 x 2,5 kg</cbc:Name>
+            <cac:SellersItemIdentification>
+                <cbc:ID>400502</cbc:ID>
+            </cac:SellersItemIdentification>
+            <cac:ClassifiedTaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>7</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="EUR">19.90</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+    <cac:InvoiceLine>
+        <cbc:ID>5</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="H87">2</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="EUR">32.98</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>Rapsöl 10 l Kanister</cbc:Name>
+            <cac:SellersItemIdentification>
+                <cbc:ID>500077</cbc:ID>
+            </cac:SellersItemIdentification>
+            <cac:ClassifiedTaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>7</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="EUR">16.49</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+    <cac:InvoiceLine>
+        <cbc:ID>6</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="XCR">2</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="EUR">29.80</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>Cola 0,33 l Glas, Kiste 24 Fl.</cbc:Name>
+            <cac:SellersItemIdentification>
+                <cbc:ID>600230</cbc:ID>
+            </cac:SellersItemIdentification>
+            <cac:ClassifiedTaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>19</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="EUR">14.90</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+    <cac:InvoiceLine>
+        <cbc:ID>7</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="XCR">2</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="EUR">6.84</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>Pfand Kiste 24 x 0,33 l</cbc:Name>
+            <cac:SellersItemIdentification>
+                <cbc:ID>990024</cbc:ID>
+            </cac:SellersItemIdentification>
+            <cac:ClassifiedTaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>19</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>VAT</cbc:ID>
+                </cac:TaxScheme>
+            </cac:ClassifiedTaxCategory>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="EUR">3.42</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+</ubl:Invoice>

@@ -96,3 +96,43 @@ installs with `--locked`.
 **Decision.** Tests use synthetic invoices from fictional suppliers, plus official sample files
 whose licence allows it. Real receipts, and restaurant data only with the owner's written
 permission and anonymised, stay in `data/private/`, which git ignores.
+
+## 12. Untrusted XML is parsed with defusedxml, without DTDs
+
+*26 Oct 2026*
+
+**Context.** Invoices come from outside. Standard XML parsers can be tricked into reading local
+files or calling URLs (XXE) or into expanding a few bytes into gigabytes ("billion laughs").
+
+**Decision.** All XML goes through `defusedxml` with DTDs forbidden; e-invoices never need one.
+
+**Consequences.** Both attacks are refused with a clear error, tested in `tests/test_extract.py`.
+
+## 13. Recognise files by content; route what can't be read exactly to step 5
+
+**Decision.** The file type comes from the first bytes, not the file name. XML and ZUGFeRD PDFs are
+read exactly. PDFs without XML, photos and ZUGFeRD MINIMUM / BASIC WL (totals only, no lines) are
+stored with status `received` for the OCR + LLM extractor. A ZUGFeRD PDF whose XML can't be used
+(e.g. ZUGFeRD 1.0) also falls back to its page.
+
+**Consequences.** Every file gets one of four outcomes: stored, needs OCR, duplicate, failed.
+Nothing is dropped silently.
+
+## 14. Content-addressed file store, database first
+
+**Decision.** Originals are kept under the SHA-256 of their content (`data/documents/ab/abcd....pdf`).
+The database row is written first and the file afterwards, each file in its own transaction.
+
+**Consequences.** The same file always has the same path, so re-saving is harmless and stored files
+can't be replaced by different content. A failed insert leaves no orphan file. One bad file in a
+batch never undoes the others.
+
+## 15. Official test invoices as test data; schema changed by what they showed
+
+**Decision.** 22 pairs of official XRechnung test invoices (KoSIT, Apache 2.0) are part of the
+tests. Each case exists in UBL and CII, so both must give the same invoice, and all totals must add up.
+
+**Consequences.** Two schema assumptions turned out wrong and were fixed in migration `0002`:
+unit prices may have 9 decimals (column widened to NUMERIC(20,10)), and correction invoices have
+negative allowance totals (CHECK removed). Three pairs differ in the source files themselves;
+they are documented in `tests/samples/kosit/README.md`.

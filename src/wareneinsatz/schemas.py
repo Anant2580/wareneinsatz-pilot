@@ -41,7 +41,7 @@ def _blank_to_none(value: object) -> object:
 # so a value that passes here is never silently rounded when it is stored.
 OptionalText = Annotated[str | None, BeforeValidator(_blank_to_none)]
 Amount = Annotated[Decimal, Field(max_digits=14, decimal_places=2)]  # EN 16931 amounts have at most 2 decimals
-UnitPrice = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=6)]  # rule BR-27: price is never negative
+UnitPrice = Annotated[Decimal, Field(ge=0, max_digits=20, decimal_places=10)]  # BR-27: never negative
 Quantity = Annotated[Decimal, Field(max_digits=18, decimal_places=4)]  # negative for returned goods
 VatRate = Annotated[Decimal, Field(ge=0, lt=100, max_digits=5, decimal_places=2)]  # in percent: 19, 7, 0
 
@@ -116,8 +116,10 @@ class InvoiceData(_Strict):
     supplier: SupplierData  # BG-4
     lines: list[InvoiceLineData] = Field(min_length=1)  # BG-25
     vat_breakdown: list[VatBreakdownData] = Field(default_factory=list)  # BG-23
-    allowance_total: Amount = Field(default=Decimal("0.00"), ge=0)  # BT-107 discounts on the whole document
-    charge_total: Amount = Field(default=Decimal("0.00"), ge=0)  # BT-108 e.g. delivery fee
+    # BT-107 / BT-108: discounts and charges on the whole document (e.g. delivery fee).
+    # Negative in correction invoices, where every amount is reversed.
+    allowance_total: Amount = Decimal("0.00")
+    charge_total: Amount = Decimal("0.00")
     net_total: Amount | None = None  # BT-109 total without VAT (not printed on every receipt)
     vat_total: Amount | None = None  # BT-110
     gross_total: Amount  # BT-112 total with VAT: printed on every invoice and receipt

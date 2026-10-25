@@ -4,6 +4,7 @@ Database tests need TEST_DATABASE_URL (environment or .env) and are skipped
 otherwise, so the pure unit tests run anywhere. CI provides a PostgreSQL 16.
 """
 
+import io
 import json
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import Any
 import pytest
 from alembic import command
 from alembic.config import Config
+from pypdf import PdfWriter
 from sqlalchemy import Connection, Engine, create_engine
 from sqlalchemy.orm import Session
 
@@ -20,6 +22,7 @@ from wareneinsatz.schemas import InvoiceData
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = Path(__file__).parent / "fixtures"
+SAMPLES = Path(__file__).parent / "samples"
 
 
 @pytest.fixture
@@ -31,6 +34,28 @@ def invoice_dict() -> dict[str, Any]:
 @pytest.fixture
 def invoice(invoice_dict: dict[str, Any]) -> InvoiceData:
     return InvoiceData.model_validate(invoice_dict)
+
+
+@pytest.fixture
+def samples() -> Path:
+    """tests/samples: synthetic e-invoices (einvoices/) and official KoSIT test invoices (kosit/)."""
+    return SAMPLES
+
+
+@pytest.fixture
+def make_pdf() -> Callable[..., bytes]:
+    """Build a one-page PDF, optionally with attached files, e.g. a ZUGFeRD PDF with factur-x.xml inside."""
+
+    def build(attachments: dict[str, bytes] | None = None) -> bytes:
+        writer = PdfWriter()
+        writer.add_blank_page(width=595, height=842)  # A4 in points
+        for name, data in (attachments or {}).items():
+            writer.add_attachment(name, data)
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        return buffer.getvalue()
+
+    return build
 
 
 def alembic_config(connection: Connection) -> Config:
