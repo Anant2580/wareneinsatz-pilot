@@ -97,6 +97,14 @@ def _line(item: Node, line_no: int) -> dict:
     quantity = "ram:SpecifiedLineTradeDelivery/ram:BilledQuantity"
     tax = "ram:SpecifiedLineTradeSettlement/ram:ApplicableTradeTax"
     base_quantity = item.decimal(f"{price}/ram:BasisQuantity")  # BT-149
+    # BG-27 / BG-28 line allowances and charges; ChargeIndicator true = charge, false = allowance
+    allowances = charges = Decimal("0")
+    for entry in item.findall("ram:SpecifiedLineTradeSettlement/ram:SpecifiedTradeAllowanceCharge"):
+        amount = entry.decimal("ram:ActualAmount") or Decimal("0")  # BT-136 / BT-141
+        if entry.text("ram:ChargeIndicator/udt:Indicator") == "true":
+            charges += amount
+        else:
+            allowances += amount
     return {
         "line_no": line_no,
         "description": item.text(f"{product}/ram:Name")  # BT-153
@@ -111,6 +119,8 @@ def _line(item: Node, line_no: int) -> dict:
         **unit_fields(item.attr(quantity, "unitCode")),  # BT-130
         "unit_price": item.decimal(f"{price}/ram:ChargeAmount"),  # BT-146
         "price_base_quantity": base_quantity if base_quantity is not None else Decimal("1"),
+        "allowance_amount": allowances,
+        "charge_amount": charges,
         "line_amount": item.decimal(  # BT-131
             "ram:SpecifiedLineTradeSettlement/ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount"
         ),

@@ -10,11 +10,11 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from wareneinsatz.models import Document, Invoice, InvoiceLine, Supplier
+from wareneinsatz.names import normalise_name
 from wareneinsatz.repository import (
     DocumentMeta,
     DuplicateDocumentError,
     DuplicateInvoiceError,
-    normalise_name,
     save_invoice,
 )
 from wareneinsatz.schemas import InvoiceData

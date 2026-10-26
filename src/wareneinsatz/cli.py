@@ -1,7 +1,8 @@
 """Command line interface.
 
-uv run wareneinsatz ingest invoice.xml           one file
-uv run wareneinsatz ingest inbox/                a folder (searched recursively)
+uv run wareneinsatz ingest invoice.xml           read one file
+uv run wareneinsatz ingest inbox/ --verbose      a folder (searched recursively), also showing warnings
+uv run wareneinsatz review                       invoices waiting for a person, with the reasons
 uv run wareneinsatz --version
 """
 
@@ -12,38 +13,48 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TextIO
 
-from sqlalchemy import Engine
-from sqlalchemy.exc import OperationalError
+from psycopg.errors import UndefinedTable
+from sqlalchemy import Engine, select
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from wareneinsatz import __version__
 from wareneinsatz.config import get_settings
 from wareneinsatz.db import make_engine, session_scope
 from wareneinsatz.ingest.pipeline import IngestResult, Outcome, ingest_file
 from wareneinsatz.ingest.store import DocumentStore
+from wareneinsatz.models import Invoice
 
 LABELS = {
-    Outcome.STORED: "stored",
+    Outcome.APPROVED: "approved",
+    Outcome.NEEDS_REVIEW: "review",
     Outcome.NEEDS_OCR: "needs OCR",
     Outcome.DUPLICATE: "duplicate",
     Outcome.FAILED: "failed",
 }
+INDENT = " " * 11  # lines up issue lists under the file names
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="wareneinsatz", description="Food-cost copilot for restaurants.")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
+
     ingest = commands.add_parser(
         "ingest",
         help="read supplier invoices into the database",
-        description="Reads XRechnung (UBL/CII) and ZUGFeRD/Factur-X invoices exactly. "
+        description="Reads XRechnung (UBL/CII) and ZUGFeRD/Factur-X invoices exactly and checks them. "
         "PDFs without XML and photos are stored for OCR (step 5).",
     )
     ingest.add_argument("paths", nargs="+", type=Path, help="files or folders (folders are searched recursively)")
-    args = parser.parse_args(argv)
+    ingest.add_argument("-v", "--verbose", action="store_true", help="also list warnings of approved invoices")
 
+    commands.add_parser("review", help="list invoices waiting for review, with the reasons")
+
+    args = parser.parse_args(argv)
     if args.command == "ingest":
-        return run_ingest(args.paths)
+        return run_ingest(args.paths, verbose=args.verbose)
+    if args.command == "review":
+        return run_review()
     return 2  # argparse already rejects unknown commands; kept for completeness
 
 
@@ -74,13 +85,14 @@ def find_files(paths: Iterable[Path]) -> tuple[list[Path], list[Path]]:
 def run_ingest(
     paths: Iterable[Path],
     *,
+    verbose: bool = False,
     engine: Engine | None = None,
     store: DocumentStore | None = None,
     out: TextIO = sys.stdout,
 ) -> int:
     """Ingest every file in its own transaction, so one bad file never undoes the others.
 
-    Exit code: 0 all fine, 1 some files failed, 2 database not reachable.
+    Exit code: 0 all fine, 1 some files failed, 2 database not reachable or not migrated.
     """
     files, missing = find_files(paths)
     for path in missing:
@@ -98,15 +110,68 @@ def run_ingest(
             with session_scope(engine) as session:
                 result = ingest_file(session, store, path)
         except OperationalError as error:
-            print(f"Cannot reach the database: {error.orig}", file=out)
-            print("Is it running? Start it with: docker compose up -d --wait db", file=out)
-            return 2
+            return _database_unreachable(error, out)
+        except ProgrammingError as error:
+            if isinstance(error.orig, UndefinedTable):
+                return _tables_missing(out)
+            result = IngestResult(path.name, Outcome.FAILED, f"Unexpected error: {type(error).__name__}: {error}")
         except Exception as error:  # report it and carry on with the next file
             result = IngestResult(path.name, Outcome.FAILED, f"Unexpected error: {type(error).__name__}: {error}")
         counts[result.outcome] += 1
-        timing = f"  ({result.method}, {result.extraction_ms} ms)" if result.method else ""
-        print(f"{LABELS[result.outcome]:<10} {path.name}  {result.message}{timing}", file=out)
+        _print_result(result, verbose, out)
 
     summary = ", ".join(f"{counts[outcome]} {LABELS[outcome]}" for outcome in Outcome)
     print(f"\n{len(files)} file(s): {summary}", file=out)
     return 1 if counts[Outcome.FAILED] or missing else 0
+
+
+def run_review(*, engine: Engine | None = None, out: TextIO = sys.stdout) -> int:
+    """Print every invoice with status needs_review and its findings, oldest first."""
+    engine = engine or make_engine()
+    try:
+        with session_scope(engine) as session:
+            invoices = session.scalars(
+                select(Invoice).where(Invoice.status == "needs_review").order_by(Invoice.created_at, Invoice.id)
+            ).all()
+            if not invoices:
+                print("No invoices waiting for review.", file=out)
+                return 0
+            for invoice in invoices:
+                print(
+                    f"#{invoice.id:<5} {invoice.issue_date or '(no date)'}  {invoice.supplier.name}"
+                    f" | invoice {invoice.invoice_number or '-'} | {invoice.gross_total} {invoice.currency}",
+                    file=out,
+                )
+                for issue in invoice.review_issues:
+                    print(f"{INDENT}{issue['severity']:<8} {issue['message']}", file=out)
+            print(f"\n{len(invoices)} invoice(s) waiting for review", file=out)
+    except OperationalError as error:
+        return _database_unreachable(error, out)
+    except ProgrammingError as error:
+        if isinstance(error.orig, UndefinedTable):
+            return _tables_missing(out)
+        raise
+    return 0
+
+
+def _print_result(result: IngestResult, verbose: bool, out: TextIO) -> None:
+    timing = f"  ({result.method}, {result.extraction_ms} ms)" if result.method else ""
+    warnings = [issue for issue in result.issues if issue.severity == "warning"]
+    errors = [issue for issue in result.issues if issue.severity == "error"]
+    note = f"  [{len(warnings)} warning(s)]" if warnings and not (verbose or errors) else ""
+    print(f"{LABELS[result.outcome]:<10} {result.filename}  {result.message}{timing}{note}", file=out)
+    # Errors are always listed; warnings when the invoice needs review anyway, or with --verbose.
+    shown = errors + (warnings if verbose or errors else [])
+    for issue in shown:
+        print(f"{INDENT}{issue.severity:<8} {issue.message}", file=out)
+
+
+def _tables_missing(out: TextIO) -> int:
+    print("The database has no tables yet. Create them with: uv run alembic upgrade head", file=out)
+    return 2
+
+
+def _database_unreachable(error: OperationalError, out: TextIO) -> int:
+    print(f"Cannot reach the database: {error.orig}", file=out)
+    print("Is it running? Start it with: docker compose up -d --wait db", file=out)
+    return 2

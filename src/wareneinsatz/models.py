@@ -119,7 +119,7 @@ class Invoice(Base):
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="currency_iso"),
         # Price history needs a date, so an invoice can only be approved once its date is known.
         CheckConstraint(
-            "status <> 'approved' OR (issue_date IS NOT NULL AND approved_at IS NOT NULL)",
+            "status <> 'approved' OR (issue_date IS NOT NULL AND approved_at IS NOT NULL AND approved_by IS NOT NULL)",
             name="approved_has_date",
         ),
     )
@@ -142,6 +142,8 @@ class Invoice(Base):
     # Findings of the validation step (step 3), shown on the review screen.
     review_issues: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # 'auto' when the validation step approved it, otherwise the reviewer's name (review screen, step 8).
+    approved_by: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     document: Mapped[Document] = relationship(back_populates="invoice")
@@ -200,6 +202,8 @@ class InvoiceLine(Base):
     unit_raw: Mapped[str | None] = mapped_column(Text)
     unit_price: Mapped[Decimal] = mapped_column(UNIT_PRICE)
     price_base_quantity: Mapped[Decimal] = mapped_column(QUANTITY, server_default=text("1"))
+    allowance_amount: Mapped[Decimal] = mapped_column(MONEY, server_default=text("0"))  # line discounts
+    charge_amount: Mapped[Decimal] = mapped_column(MONEY, server_default=text("0"))  # line surcharges
     line_amount: Mapped[Decimal] = mapped_column(MONEY)
     vat_rate: Mapped[Decimal | None] = mapped_column(RATE)
     confidence: Mapped[float | None] = mapped_column(Float)

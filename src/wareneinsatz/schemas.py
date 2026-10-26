@@ -91,7 +91,10 @@ class InvoiceLineData(_Strict):
     unit_raw: OptionalText = None  # unit as printed ("kg", "Krt", "St"); OCR documents are mapped to unit_code in code
     unit_price: UnitPrice  # BT-146 price per price_base_quantity units
     price_base_quantity: Decimal = Field(default=Decimal(1), gt=0, max_digits=18, decimal_places=4)  # BT-149
-    line_amount: Amount  # BT-131 quantity x price, net (or gross if the document prints gross prices)
+    # BG-27 / BG-28: discounts and surcharges on this line (sums of BT-136 / BT-141), e.g. 10 % off.
+    allowance_amount: Amount = Decimal("0.00")
+    charge_amount: Amount = Decimal("0.00")
+    line_amount: Amount  # BT-131 = quantity x price + charges - allowances (net, or gross on till receipts)
     vat_rate: VatRate | None = None  # BT-152; None if the document doesn't show it (flagged for review)
     confidence: float | None = Field(default=None, ge=0, le=1)  # extractor's confidence; None for exact XML
 

@@ -1,7 +1,7 @@
 # Data model
 
 PostgreSQL 16. Tables are added step by step through Alembic migrations; this page shows the
-whole MVP model and which step adds each part. Steps 1 and 2 (migrations `0001`, `0002`) exist
+whole MVP model and which step adds each part. Steps 1–3 (migrations `0001`–`0003`) exist
 today, the rest is the plan and may change as the project learns.
 
 ```mermaid
@@ -101,7 +101,7 @@ erDiagram
     }
 ```
 
-## Step 1: invoices (migrations `0001` and `0002`, exist)
+## Steps 1–3: invoices (migrations `0001`–`0003`, exist)
 
 | Table | Purpose |
 |---|---|
@@ -112,6 +112,7 @@ erDiagram
 | `invoice_lines` | Lines exactly as printed: text, article number, quantity, unit, price, VAT rate. |
 
 Migration `0002` (step 2) widened `unit_price` to NUMERIC(20,10) and allowed negative allowance and charge totals, after the official test invoices showed both.
+Migration `0003` (step 3) added line discounts and surcharges (`allowance_amount`, `charge_amount`) and `approved_by` ('auto' or the reviewer); `review_issues` holds the validation findings.
 
 ## Step 6: matching and prices (planned, migration `0002`)
 

@@ -15,6 +15,7 @@ dependencies = [
     "pydantic>=2.14",         # canonical invoice schema and validation
     "pydantic-settings>=2.16", # configuration from environment variables / .env
     "pypdf>=6.21",            # reading the XML embedded in ZUGFeRD / Factur-X PDFs
+    "python-stdnum>=2.2",     # check digits of VAT IDs and EAN/GTIN barcodes
     "sqlalchemy>=2.1",        # ORM and SQL toolkit
 ]
 

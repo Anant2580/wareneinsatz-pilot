@@ -8,9 +8,8 @@ which a second upload could slip through.
 
 from __future__ import annotations
 
-import re
-import unicodedata
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -18,6 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from wareneinsatz.models import Document, Invoice, InvoiceLine, InvoiceTaxTotal, Supplier
+from wareneinsatz.names import normalise_name
 from wareneinsatz.schemas import InvoiceData, SupplierData
 
 
@@ -40,15 +40,6 @@ class DocumentMeta:
     storage_path: str | None = None
     extraction_method: str | None = None
     extraction_ms: int | None = None
-
-
-def normalise_name(name: str) -> str:
-    """'METRO Deutschland GmbH.' and 'Metro  Deutschland GmbH' both become 'metro deutschland gmbh'.
-
-    casefold() also maps 'ß' to 'ss', so 'Großhandel' and 'Grosshandel' match.
-    """
-    folded = unicodedata.normalize("NFKC", name).casefold()
-    return re.sub(r"[\W_]+", " ", folded).strip()
 
 
 def get_or_create_supplier(session: Session, data: SupplierData) -> Supplier:
@@ -169,6 +160,28 @@ def save_document(session: Session, meta: DocumentMeta, *, status: str, error: s
             ) from integrity_error
         raise
     return document
+
+
+def record_validation(
+    session: Session,
+    invoice: Invoice,
+    issues: list[dict[str, Any]],
+    *,
+    approve: bool,
+    approved_by: str = "auto",
+    now: datetime | None = None,
+) -> None:
+    """Store the validation findings on the invoice and approve it or send it to review."""
+    invoice.review_issues = issues
+    if approve:
+        invoice.status = "approved"
+        invoice.approved_at = now or datetime.now(UTC)
+        invoice.approved_by = approved_by
+    else:
+        invoice.status = "needs_review"
+        invoice.approved_at = None
+        invoice.approved_by = None
+    session.flush()  # the database's CHECK (approved => date, time and approver) is enforced here
 
 
 def _violated_constraint(error: IntegrityError) -> str | None:

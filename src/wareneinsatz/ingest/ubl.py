@@ -98,6 +98,14 @@ def _line(line: Node, line_no: int, quantity_tag: str) -> dict:
     """BG-25 Invoice line, numbered by position (BT-126 is free text)."""
     item = "cac:Item"
     base_quantity = line.decimal("cac:Price/cbc:BaseQuantity")  # BT-149
+    # BG-27 / BG-28 line allowances and charges; ChargeIndicator true = charge, false = allowance
+    allowances = charges = Decimal("0")
+    for entry in line.findall("cac:AllowanceCharge"):
+        amount = entry.decimal("cbc:Amount") or Decimal("0")  # BT-136 / BT-141
+        if entry.text("cbc:ChargeIndicator") == "true":
+            charges += amount
+        else:
+            allowances += amount
     return {
         "line_no": line_no,
         "description": line.text(f"{item}/cbc:Name")  # BT-153
@@ -112,6 +120,8 @@ def _line(line: Node, line_no: int, quantity_tag: str) -> dict:
         **unit_fields(line.attr(quantity_tag, "unitCode")),  # BT-130
         "unit_price": line.decimal("cac:Price/cbc:PriceAmount"),  # BT-146
         "price_base_quantity": base_quantity if base_quantity is not None else Decimal("1"),
+        "allowance_amount": allowances,
+        "charge_amount": charges,
         "line_amount": line.decimal("cbc:LineExtensionAmount"),  # BT-131
         "vat_rate": vat_rate(
             line.decimal(f"{item}/cac:ClassifiedTaxCategory/cbc:Percent"),  # BT-152

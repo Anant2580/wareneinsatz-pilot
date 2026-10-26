@@ -15,6 +15,9 @@ from wareneinsatz.ingest.xmlutil import local_name, namespace, parse_xml
 from wareneinsatz.ingest.zugferd import find_invoice_xml
 from wareneinsatz.schemas import InvoiceData
 
+# Read from structured XML, so no reading errors are possible: allowed to be approved automatically.
+EXACT_METHODS = frozenset({"xml-ubl", "xml-cii", "pdf-zugferd"})
+
 
 @dataclass(frozen=True)
 class Extraction:

@@ -136,3 +136,32 @@ tests. Each case exists in UBL and CII, so both must give the same invoice, and 
 unit prices may have 9 decimals (column widened to NUMERIC(20,10)), and correction invoices have
 negative allowance totals (CHECK removed). Three pairs differ in the source files themselves;
 they are documented in `tests/samples/kosit/README.md`.
+
+## 16. Errors block, warnings inform; only exact e-invoices are approved automatically
+
+*26 Oct 2026*
+
+**Context.** A review queue only helps if it is short. Flagging every oddity would bury the real
+problems; approving everything would let misread prices into the cost calculation.
+
+**Decision.** Each rule has a severity. Errors (amounts that don't add up, missing or impossible
+VAT rates, missing or future dates, unknown units, low extraction confidence) send the invoice
+to review. Warnings (invalid VAT ID check digit, missing tax ID above 250 EUR, supplier name or
+VAT ID differs from the stored supplier, old dates, foreign currency) are stored with the invoice
+but don't block. An invoice is approved automatically only if it was read exactly from XML and has
+no errors; `approved_by` records 'auto' or the reviewer.
+
+**Consequences.** All 44 official KoSIT test invoices pass without errors (a test guards this), so
+valid e-invoices don't create review work. Anything read by OCR + LLM is always seen by a person.
+The share of invoices that need review becomes a measurable KPI.
+
+## 17. Rules follow EN 16931, with tolerances only where rounding needs them
+
+**Decision.** The checks mirror the standard's calculation rules (BR-CO-10/13/15/17). Totals must
+match exactly; a line amount and a VAT amount per rate may differ by one cent from the recalculated
+value, because senders round differently. Messages show the calculation, e.g.
+"Line 4: 20 × 2.77 = 55.40, but the line says 55.46".
+
+**Consequences.** Line discounts and surcharges (BG-27/BG-28) had to be stored (migration `0003`),
+otherwise valid lines with a discount would fail. A wider run on 144 official samples flagged only
+4 invoices, each for a real reason.
