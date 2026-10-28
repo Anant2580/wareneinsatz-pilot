@@ -35,9 +35,31 @@ uv run wareneinsatz eval run --extractor pdf-text-baseline
 ```
 
 Extractors: `oracle` (returns the truth; checks the harness itself), `einvoice` (the exact step 2
-reader), `pdf-text-baseline` (rules on the PDF text layer). The OCR + LLM extractor of step 5 will
-be added and measured the same way. Each run writes `results/<date>_<extractor>_<dataset>.md` and a
-`.json` with every number and every document's result.
+reader), `pdf-text-baseline` (rules on the PDF text layer), and the step 5 readers `llm-text`,
+`llm-vision` and `llm-hybrid` (OCR + a language model, see below). Each run writes
+`results/<date>_<extractor>_<dataset>.md` and a `.json` with every number and every document's result.
+
+### Language model runs (step 5)
+
+They need [Ollama](https://ollama.com) with a vision model, and Tesseract for the OCR text
+(macOS: `brew install tesseract tesseract-lang`). Everything is free and runs on the own computer.
+
+```bash
+ollama pull qwen3-vl:8b-instruct
+uv run wareneinsatz eval run --extractor llm-hybrid --limit 3              # quick check: 3 documents
+uv run wareneinsatz eval run --extractor llm-hybrid                        # all 82
+uv run wareneinsatz eval run --extractor llm-vision --only photo           # one mode, only the photos
+uv run wareneinsatz eval run --extractor llm-hybrid --model qwen3-vl:4b-instruct
+```
+
+`--only` picks a subset (`photo`, `pdf`, `synthetic`, `kosit`, `wholesaler`, `cash_carry`,
+`receipt`), `--limit` the first n documents. The report names the model, mode, OCR engine and
+prompt version, and adds what the model did: how many replies were complete, valid invoices,
+and the median number of tokens read and written, and tokens per second.
+
+A test guarantees that everything after the model is lossless: a perfect transcription of any of
+202 test invoices (all three layouts and all KoSIT files) scores 100 %. So every error in a
+language model run is a reading error of the model, not of the code around it.
 
 ## What is measured
 
@@ -52,7 +74,8 @@ that is missing or wrong a false negative (FN). A wrong value counts as both FP 
 Header fields: invoice number, issue and delivery date, supplier name, VAT ID and tax number, net,
 VAT and gross total. Line fields: description (counts as correct from 90 % text similarity),
 article number, quantity, unit, unit price, line discount, line amount, VAT rate. Lines are
-matched by content before comparing, so one missed line doesn't shift all the others.
+matched by content before comparing, so one missed line doesn't shift all the others. Unit codes
+that print the same ("St" for H87, C62, EA and XPP) count as equal.
 
 Also reported: documents with any result, documents read completely correctly, documents the
 step 3 validation would send to review, and the time per document.
@@ -61,7 +84,11 @@ step 3 validation would send to review, and the time per document.
 
 | Extractor | All fields F1 | Precision | Recall | With result | Completely correct | Report |
 |---|---:|---:|---:|---:|---:|---|
-| pdf-text-baseline (rules, no OCR, no AI) | 76.5 % | 95.7 % | 63.7 % | 62 of 82 | 0 of 82 | [2026-10-28](results/2026-10-28_pdf-text-baseline_default.md) |
+| pdf-text-baseline (rules, no OCR, no AI) | 78.1 % | 97.3 % | 65.2 % | 62 of 82 | 0 of 82 | [2026-10-28](results/2026-10-28_pdf-text-baseline_default.md) |
+
+The baseline was first scored at 76.5 %; after the unit comparison above was corrected (decision 25
+in `docs/decisions.md`) it is 78.1 %. The language model runs are measured on a laptop (Apple M4,
+16 GB) and added here.
 
 What the baseline shows:
 

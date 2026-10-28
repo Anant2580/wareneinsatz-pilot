@@ -2,9 +2,13 @@
 
 approved      invoice extracted exactly, all checks passed, approved automatically
 needs_review  invoice saved, but a check found an error (or it wasn't read exactly): a person decides
-needs_ocr     file saved with status 'received'; the OCR + LLM extractor (step 5) picks it up
-duplicate   the same file, or the same supplier's invoice number, is already stored
-failed      file saved with status 'failed' and the reason, so nothing disappears silently
+needs_ocr     file saved with status 'received'; `wareneinsatz extract` reads it later (step 5)
+duplicate     the same file, or the same supplier's invoice number, is already stored
+failed        file saved with status 'failed' and the reason, so nothing disappears silently
+
+Ingest is fast and exact. Reading scans and photos with a language model takes seconds to a
+minute per page, so it is a separate step (extract_document) that works through the documents
+waiting with status 'received', like a job queue.
 """
 
 import hashlib
@@ -21,13 +25,18 @@ from wareneinsatz.ingest.detect import FileType, detect_file_type
 from wareneinsatz.ingest.errors import ExtractionError, NeedsVisualExtraction
 from wareneinsatz.ingest.extract import EXACT_METHODS, extract_invoice
 from wareneinsatz.ingest.store import DocumentStore
+from wareneinsatz.models import Document
+from wareneinsatz.reading.llm import LlmError, LlmUnavailable
+from wareneinsatz.reading.reader import DocumentReader
 from wareneinsatz.repository import (
     DocumentMeta,
     DuplicateDocumentError,
     DuplicateInvoiceError,
+    mark_document_failed,
     record_validation,
     save_document,
     save_invoice,
+    save_invoice_for_document,
 )
 from wareneinsatz.validation import Issue, Severity, check_known_supplier, validate_invoice
 
@@ -107,6 +116,60 @@ def ingest_bytes(
         invoice_id=invoice.id,
         document_id=invoice.document_id,
         method=extraction.method,
+        extraction_ms=elapsed_ms,
+        issues=tuple(issues),
+    )
+
+
+def extract_document(
+    session: Session, store: DocumentStore, document: Document, reader: DocumentReader, *, today: date | None = None
+) -> IngestResult:
+    """Step 5: read a stored document (status 'received') with OCR + a language model.
+
+    The result always goes to review: a person checks what the model read before it counts.
+    LlmUnavailable is not caught: the batch stops and the document stays 'received' for the next run.
+    """
+    started = time.perf_counter()
+    try:
+        reading = reader.read(store.open(document.storage_path or ""))
+    except LlmUnavailable:
+        raise
+    except (ExtractionError, LlmError, OSError) as problem:  # OSError: the stored file is missing
+        mark_document_failed(session, document, describe(problem), method=reader.method)
+        return IngestResult(document.filename, Outcome.FAILED, describe(problem), document_id=document.id)
+    elapsed_ms = round((time.perf_counter() - started) * 1000)
+    # The model's reply exactly as it came, with the settings that produced it (model, prompt version ...).
+    raw = {"reader": reading.details, "printed": reading.printed}
+
+    if not reading.valid:
+        message = "Not a complete invoice: " + "; ".join(reading.problems[:3])
+        mark_document_failed(session, document, message, method=reader.method, raw_extraction=raw)
+        return IngestResult(document.filename, Outcome.FAILED, message, document_id=document.id)
+    try:
+        invoice = save_invoice_for_document(
+            session,
+            document,
+            reading.data,
+            extraction_method=reader.method,
+            extraction_ms=elapsed_ms,
+            raw_extraction=raw,
+        )
+    except DuplicateInvoiceError as duplicate:
+        mark_document_failed(session, document, str(duplicate), method=reader.method, raw_extraction=raw)
+        return IngestResult(document.filename, Outcome.DUPLICATE, str(duplicate), document_id=document.id)
+
+    data = reading.data
+    supplier = invoice.supplier
+    issues = validate_invoice(data, today=today).issues + check_known_supplier(supplier.name, supplier.vat_id, data)
+    record_validation(session, invoice, [issue.as_dict() for issue in issues], approve=False)  # never automatic
+    return IngestResult(
+        document.filename,
+        Outcome.NEEDS_REVIEW,
+        f"{data.supplier.name} | invoice {data.invoice_number or '-'} | {len(data.lines)} lines"
+        f" | {data.gross_total} {data.currency}",
+        invoice_id=invoice.id,
+        document_id=document.id,
+        method=reader.method,
         extraction_ms=elapsed_ms,
         issues=tuple(issues),
     )

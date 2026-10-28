@@ -200,3 +200,72 @@ reports refer to it. A test checks that generation is byte-identical.
 **Consequences.** The repository stays small (the set is about 4 MB), anyone can rebuild exactly
 the same documents, and results can be traced to the exact files. Private test data (own
 receipts) lives in `data/private/`, outside git.
+
+## 21. Open models on the own machine (Ollama), not a paid API
+
+*29 Oct 2026*
+
+**Context.** The cost rule (decision 18) excludes paid APIs. Invoices are business data: prices
+and suppliers of a real restaurant should not leave the machine without a reason.
+
+**Decision.** The language model runs locally with Ollama, an open-source model server.
+Default model: Qwen3-VL in the instruct variant (no hidden reasoning, so faster), 8B or 4B
+parameters, quantised to 4 bits (6.2 GB / 3.3 GB). It reads images and text, and Ollama's
+structured output forces its reply into a JSON schema. The client also speaks the
+OpenAI-compatible API (llama.cpp's llama-server, LM Studio, cloud APIs) as an escape hatch.
+
+**Consequences.** Costs nothing and nothing leaves the computer. It needs a machine with about
+16 GB of RAM; an Apple Silicon laptop uses its GPU. A free cloud tier would be faster but may
+use the data to improve its models (Google's unpaid Gemini terms, for example, allow human
+review) and limits requests per day, so it is only an option for the synthetic test data.
+
+## 22. The model transcribes, code interprets
+
+**Context.** Language models read well but make mistakes with German number formats and
+arithmetic, and a wrong price is worse than a missing one.
+
+**Decision.** The model returns every value as a string exactly as printed ("1.234,56", "A",
+"Krt") in a separate schema (`reading/printed.py`). `reading/interpret.py` turns that into
+`InvoiceData`: German numbers and dates, VAT codes via the VAT table, printed units to UN/ECE
+codes, the product row minus its discount row as line amount, gross or net by which printed
+total the lines add up to. Where a number can be read two ways ("1.554"), the reading that makes
+quantity × price = amount wins. Two repairs are checked against the printed amounts: swapped
+net/VAT columns and a missing rate that tax ÷ net shows.
+
+**Consequences.** Every rule is a unit test, not a prompt. A test proves the step is lossless:
+for 180 synthetic invoices in three layouts and the 22 KoSIT invoices, a perfect transcription
+gives back every scored field. Any error left in the evaluation is a reading error of the model.
+
+## 23. Three reading modes, compared on the same documents
+
+**Decision.** `text` (the PDF's own text layer, or Tesseract OCR for photos), `vision` (only the
+page images) and `hybrid` (both: the image for the layout, the text for exact digits). Photos are
+cleaned before OCR: median filter, contrast stretch, upscaling, and deskewing by a projection
+profile (the rotation at which the rows of edges line up best), all in Pillow.
+
+**Consequences.** The evaluation shows which mode is worth its cost: images make the model slower,
+OCR text alone loses the table layout of photos. All settings of a run (mode, model, OCR engine,
+prompt version) are stored with every result and printed in every report.
+
+## 24. Extraction is a separate step, and its results are always reviewed
+
+**Decision.** `ingest` stays fast and exact; documents it can't read exactly get status
+`received`. `wareneinsatz extract` works through them like a job queue, one transaction per
+document. The model's untouched reply and the settings are stored in `raw_extraction`. A reply
+that isn't a complete invoice marks the document `failed` with the reason. If the model server
+is down, the batch stops and the documents stay `received` for the next run. A photo of an
+invoice that already arrived as XML is caught by the duplicate check.
+
+**Consequences.** A slow model never blocks uploads, and in step 8 the same function runs in a
+background worker. Nothing read by a model is approved automatically (decision 16), and the
+stored raw reply makes it possible to measure the model's accuracy on real invoices later, by
+comparing it with what the reviewer approved.
+
+## 25. Units that print the same count as the same in scoring
+
+**Context.** The KoSIT XML files use the codes XPP and C62 for pieces; the rendered PDF shows
+"St" for both, which every reader maps to H87. No reader could score these lines.
+
+**Decision.** The metric treats H87, C62, EA and XPP as equal (all are "one piece" in
+`units.py`). The rule-based baseline was re-run: all-fields F1 76.5 % → 78.1 %, with "Box" added
+to the printed units at the same time.

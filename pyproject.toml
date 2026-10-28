@@ -11,10 +11,14 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.20",          # database migrations
     "defusedxml>=0.7",        # safe XML parsing (no external entities, no entity bombs)
+    "httpx>=0.28",            # HTTP client for the language model server (step 5)
+    "pillow>=13.0",           # images: photos, OCR clean-up, images for the model
+    "pillow-heif>=1.1",       # iPhone photos (HEIC)
     "psycopg[binary]>=3.3",   # PostgreSQL driver
     "pydantic>=2.14",         # canonical invoice schema and validation
     "pydantic-settings>=2.16", # configuration from environment variables / .env
-    "pypdf>=6.21",            # reading the XML embedded in ZUGFeRD / Factur-X PDFs
+    "pypdf>=6.21",            # XML embedded in ZUGFeRD / Factur-X PDFs, PDF text layers
+    "pypdfium2>=5.14",        # rendering PDF pages to images
     "python-stdnum>=2.2",     # check digits of VAT IDs and EAN/GTIN barcodes
     "sqlalchemy>=2.1",        # ORM and SQL toolkit
 ]
@@ -24,8 +28,6 @@ wareneinsatz = "wareneinsatz.cli:main"
 
 [dependency-groups]
 dev = [
-    "pillow>=13.0",           # evaluation set: photo-like versions of invoices
-    "pypdfium2>=5.14",        # evaluation set: rendering PDF pages to images
     "pytest>=9.1",
     "reportlab>=5.1",         # evaluation set: generating invoice PDFs
     "ruff>=0.17",

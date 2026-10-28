@@ -96,6 +96,7 @@ PRINTED_UNITS = {
     **dict.fromkeys(["ds", "dose"], "XCX"),
     **dict.fromkeys(["pck", "pack", "pkg", "packung", "pkt", "paket"], "XPK"),
     **dict.fromkeys(["btl", "beutel"], "XBG"),
+    **dict.fromkeys(["box", "schachtel"], "XBX"),
     **dict.fromkeys(["sack"], "XSA"),
     **dict.fromkeys(["netz"], "XNT"),
     **dict.fromkeys(["gl", "glas"], "XJR"),
@@ -104,6 +105,20 @@ PRINTED_UNITS = {
     **dict.fromkeys(["tb", "tube"], "XTU"),
     **dict.fromkeys(["fass"], "XKG"),
     **dict.fromkeys(["pal", "palette"], "XPX"),
+    # Services (delivery, rent, energy), as printed on service invoices
+    **dict.fromkeys(["t", "to", "tonne"], "TNE"),
+    **dict.fromkeys(["pausch", "pauschal", "pauschale", "psch"], "LS"),
+    **dict.fromkeys(["std", "stunde", "stunden", "h"], "HUR"),
+    **dict.fromkeys(["tag", "tage"], "DAY"),
+    **dict.fromkeys(["woche", "wochen"], "WEE"),
+    **dict.fromkeys(["monat", "monate", "mon"], "MON"),
+    **dict.fromkeys(["jahr", "jahre"], "ANN"),
+    **dict.fromkeys(["kwh"], "KWH"),
+    **dict.fromkeys(["kw"], "KWT"),
+    **dict.fromkeys(["m", "meter"], "MTR"),
+    **dict.fromkeys(["km"], "KMT"),
+    **dict.fromkeys(["m2", "m²", "qm"], "MTK"),
+    **dict.fromkeys(["set"], "SET"),
 }
 
 

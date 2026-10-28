@@ -27,6 +27,7 @@ from decimal import Decimal
 from typing import Any
 
 from wareneinsatz.names import normalise_name
+from wareneinsatz.units import UNITS
 
 DESCRIPTION_SIMILARITY = 0.9  # descriptions count as equal from this similarity on (OCR noise, spacing)
 MATCH_THRESHOLD = 0.5  # below this similarity two lines are not considered the same line
@@ -74,6 +75,15 @@ def similar_description(truth: Any, pred: Any) -> bool:
     return similarity(truth, pred) >= DESCRIPTION_SIMILARITY
 
 
+def same_unit(truth: Any, pred: Any) -> bool:
+    """Unit codes: equal, or both "one piece". H87, C62, EA and XPP are all printed as "St", so the
+    document can't tell them apart; the KoSIT XML uses XPP and C62 where a reader sees "St" (H87)."""
+    if identifier(truth, pred):
+        return True
+    a, b = UNITS.get(str(truth).upper()), UNITS.get(str(pred).upper())
+    return bool(a and b and a.base == b.base == "piece" and a.factor == b.factor == 1)
+
+
 HEADER_FIELDS: dict[str, tuple[Getter, Comparer]] = {
     "invoice_number": (lambda d: d.invoice_number, identifier),
     "issue_date": (lambda d: d.issue_date, exact),
@@ -89,7 +99,7 @@ LINE_FIELDS: dict[str, tuple[Getter, Comparer]] = {
     "description": (lambda line: line.description, similar_description),
     "seller_article_no": (lambda line: line.seller_article_no, identifier),
     "quantity": (lambda line: line.quantity, exact),
-    "unit_code": (lambda line: line.unit_code, identifier),
+    "unit_code": (lambda line: line.unit_code, same_unit),
     "unit_price": (lambda line: line.unit_price, exact),
     "allowance_amount": (lambda line: _zero_is_empty(line.allowance_amount), exact),
     "line_amount": (lambda line: line.line_amount, exact),

@@ -12,11 +12,13 @@ from stdnum.eu import vat as eu_vat
 from wareneinsatz.cli import main
 from wareneinsatz.evaluation.baseline import extract_with_rules
 from wareneinsatz.evaluation.dataset import generate_dataset, load_dataset, write_truth_template
-from wareneinsatz.evaluation.harness import evaluate, write_report
-from wareneinsatz.evaluation.metrics import align_lines, score_document, similarity
+from wareneinsatz.evaluation.extractors import reader_extractor
+from wareneinsatz.evaluation.harness import evaluate, select_items, write_report
+from wareneinsatz.evaluation.metrics import align_lines, same_unit, score_document, similarity
 from wareneinsatz.evaluation.photo import photo_of
 from wareneinsatz.evaluation.render import de_money, de_number, render_pdf
-from wareneinsatz.evaluation.synthetic import InvoiceGenerator
+from wareneinsatz.evaluation.synthetic import InvoiceGenerator, Layout
+from wareneinsatz.reading import DocumentReader, LlmUnavailable, Mode
 from wareneinsatz.validation import validate_invoice
 
 KOSIT = Path(__file__).parent / "samples" / "kosit"
@@ -219,3 +221,62 @@ def test_cli_generate_and_run(tmp_path, capsys):
     assert "F1 100.0%" in output
     assert list((tmp_path / "res").glob("*_oracle_default.md"))
     assert main(["eval", "run", "--extractor", "nope", "--dataset", str(tmp_path / "ds")]) == 2
+
+
+# --- step 5: language model extractors ------------------------------------------------------------------
+
+
+def test_units_printed_the_same_count_as_equal():
+    assert same_unit("XPP", "H87") and same_unit("C62", "H87")  # all printed as "St"
+    assert same_unit("KGM", "kgm")
+    assert not same_unit("XCT", "H87") and not same_unit("DZN", "H87")
+
+
+def test_subsets(small_dataset):
+    items = load_dataset(small_dataset).items
+    assert {item.kind for item in select_items(items, "photo", None)} == {"photo"}
+    assert len(select_items(items, "kosit", 1)) == 1
+    assert len(select_items(items, None, None)) == 44
+
+
+def test_language_model_extractor_on_a_subset(small_dataset, fake_llm, printed_of, tmp_path):
+    dataset = load_dataset(small_dataset)
+    first = next(item for item in dataset.items if item.template == "receipt")
+    truth = dataset.load_truth(small_dataset, first)
+    # The fake model always answers with a perfect transcription of the first receipt.
+    llm = fake_llm(printed_of(truth, Layout(template="receipt", printed_units={})).model_dump_json())
+    seen = []
+    report = evaluate(
+        small_dataset,
+        reader_extractor(DocumentReader(llm, Mode.VISION)),
+        only="receipt",
+        limit=3,
+        progress=lambda number, total, result: seen.append((number, total, result.item.id)),
+    )
+    summary = report.summary()
+    assert [(n, t) for n, t, _ in seen] == [(1, 3), (2, 3), (3, 3)]
+    assert summary["subset"] == {"only": "receipt", "limit": 3}
+    assert summary["settings"]["model"] == "fake:fake-vl:1b"
+    assert summary["items"][0]["fully_correct"] is True
+    assert summary["items"][0]["details"]["valid"] is True
+    assert summary["language_model"]["replies"] == 3
+    assert summary["language_model"]["median_output_tokens"] == 300
+
+    markdown, _data = write_report(report, tmp_path)
+    assert markdown.name.endswith("_llm-vision_fake-vl-1b_default_receipt_first3.md")
+    assert "Language model:" in markdown.read_text() and "fake:fake-vl:1b" in markdown.read_text()
+
+
+def test_evaluation_stops_when_the_model_server_is_gone(small_dataset, fake_llm):
+    class GoneLlm(fake_llm):
+        def complete(self, **request):
+            raise LlmUnavailable("Ollama is not reachable")
+
+    with pytest.raises(LlmUnavailable):
+        evaluate(small_dataset, reader_extractor(DocumentReader(GoneLlm("{}"), Mode.VISION)), limit=2)
+
+
+def test_cli_language_model_run_without_a_server(small_dataset, capsys):
+    args = ["eval", "run", "--extractor", "llm-vision", "--base-url", "http://127.0.0.1:9"]
+    assert main([*args, "--dataset", str(small_dataset)]) == 2
+    assert "not reachable" in capsys.readouterr().out

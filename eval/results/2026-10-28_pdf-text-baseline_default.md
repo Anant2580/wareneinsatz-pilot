@@ -1,23 +1,23 @@
 # Evaluation: pdf-text-baseline
 
-Dataset **default** (seed 2026), 82 documents · run 2026-10-28T17:47:37+00:00 · wareneinsatz 0.1.0
+Dataset **default** (seed 2026), 82 documents · run 2026-10-28T18:42:59+00:00 · wareneinsatz 0.1.0
 
 | Fields | Precision | Recall | F1 |
 |---|---:|---:|---:|
-| All fields | 95.7% | 63.7% | 76.5% |
+| All fields | 97.3% | 65.2% | 78.1% |
 | Header fields | 91.4% | 65.6% | 76.4% |
-| Line fields | 96.5% | 63.4% | 76.5% |
+| Line fields | 98.4% | 65.1% | 78.4% |
 
 - **Documents with a result:** 62 of 82
 - **Completely correct:** 0 of 82
-- **Would need review** (validation error in the result): 42 of 62
-- **Time per document:** median 4 ms, 95th percentile 10 ms
+- **Would need review** (validation error in the result): 37 of 62
+- **Time per document:** median 5 ms, 95th percentile 9 ms
 
 ## By document group
 
 | Group | Documents | With result | Completely correct | F1 |
 |---|---:|---:|---:|---:|
-| kosit · pdf · wholesaler | 22 | 22 | 0 | 81.7% |
+| kosit · pdf · wholesaler | 22 | 22 | 0 | 91.3% |
 | synthetic · pdf · cash_carry | 13 | 13 | 0 | 90.3% |
 | synthetic · pdf · receipt | 12 | 12 | 0 | 89.3% |
 | synthetic · pdf · wholesaler | 15 | 15 | 0 | 96.8% |
@@ -40,7 +40,7 @@ Dataset **default** (seed 2026), 82 documents · run 2026-10-28T17:47:37+00:00 �
 | description | 369 | 7 | 158 | 98.1% | 70.0% | 81.7% |
 | seller_article_no | 266 | 0 | 93 | 100.0% | 74.1% | 85.1% |
 | quantity | 376 | 0 | 151 | 100.0% | 71.3% | 83.3% |
-| unit_code | 314 | 44 | 213 | 87.7% | 59.6% | 71.0% |
+| unit_code | 376 | 0 | 151 | 100.0% | 71.3% | 83.3% |
 | unit_price | 376 | 0 | 151 | 100.0% | 71.3% | 83.3% |
 | allowance_amount | 0 | 0 | 42 | – | 0.0% | 0.0% |
 | line_amount | 345 | 31 | 182 | 91.8% | 65.5% | 76.4% |

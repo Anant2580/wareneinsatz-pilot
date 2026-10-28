@@ -1,17 +1,19 @@
 {
   "extractor": "pdf-text-baseline",
+  "settings": {},
   "dataset": {
     "name": "default",
     "seed": 2026,
     "documents": 82
   },
-  "created": "2026-10-28T17:47:37+00:00",
+  "subset": {},
+  "created": "2026-10-28T18:42:59+00:00",
   "version": "0.1.0",
   "scores": {
     "all_fields": {
-      "precision": 0.9570086705202312,
-      "recall": 0.6369319547968262,
-      "f1": 0.7648332611520139
+      "precision": 0.9730796841349605,
+      "recall": 0.6518393844674201,
+      "f1": 0.7807055435565154
     },
     "header_fields": {
       "precision": 0.9135514018691588,
@@ -19,9 +21,9 @@
       "f1": 0.763671875
     },
     "line_fields": {
-      "precision": 0.964957264957265,
-      "recall": 0.6337356160538872,
-      "f1": 0.7650347281043537
+      "precision": 0.9838846480067854,
+      "recall": 0.6511366825708672,
+      "f1": 0.7836514102347577
     }
   },
   "fields": {
@@ -122,12 +124,12 @@
       "f1": 0.832779623477298
     },
     "unit_code": {
-      "tp": 314,
-      "fp": 44,
-      "fn": 213,
-      "precision": 0.8770949720670391,
-      "recall": 0.5958254269449715,
-      "f1": 0.7096045197740112
+      "tp": 376,
+      "fp": 0,
+      "fn": 151,
+      "precision": 1.0,
+      "recall": 0.713472485768501,
+      "f1": 0.832779623477298
     },
     "unit_price": {
       "tp": 376,
@@ -165,30 +167,31 @@
   "documents": {
     "with_result": 62,
     "fully_correct": 0,
-    "needs_review": 42,
+    "needs_review": 37,
     "errors": 0
   },
   "seconds_per_document": {
-    "median": 0.0044211229999859825,
-    "p95": 0.00968225999997685,
-    "mean": 0.004677262609754407
+    "median": 0.004534583500117151,
+    "p95": 0.009296319000441144,
+    "mean": 0.00471274404878009
   },
+  "language_model": null,
   "groups": {
     "kosit · pdf · wholesaler": {
       "documents": 22,
       "with_result": 22,
       "fully_correct": 0,
-      "precision": 0.8606870229007634,
-      "recall": 0.7775862068965518,
-      "f1": 0.8170289855072463
+      "precision": 0.9463955637707948,
+      "recall": 0.8827586206896552,
+      "f1": 0.9134701159678859
     },
     "synthetic · pdf · cash_carry": {
       "documents": 13,
       "with_result": 13,
       "fully_correct": 0,
-      "precision": 0.9778085991678225,
-      "recall": 0.8382877526753865,
-      "f1": 0.9026888604353394
+      "precision": 0.9778393351800554,
+      "recall": 0.8394768133174791,
+      "f1": 0.9033909149072296
     },
     "synthetic · pdf · receipt": {
       "documents": 12,
@@ -231,8 +234,9 @@
       "f1": 0.9444444444444444,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0099,
-      "error": null
+      "seconds": 0.0102,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-002-wholesaler",
@@ -241,8 +245,9 @@
       "f1": 0.98989898989899,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0084,
-      "error": null
+      "seconds": 0.0087,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-003-wholesaler",
@@ -251,8 +256,9 @@
       "f1": 0.9565217391304347,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0062,
-      "error": null
+      "seconds": 0.0063,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-004-wholesaler",
@@ -261,8 +267,9 @@
       "f1": 0.9905660377358491,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0091,
-      "error": null
+      "seconds": 0.0093,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-005-wholesaler",
@@ -271,8 +278,9 @@
       "f1": 0.9364161849710982,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0079,
-      "error": null
+      "seconds": 0.0083,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-006-wholesaler",
@@ -281,8 +289,9 @@
       "f1": 0.9626168224299064,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0119,
-      "error": null
+      "seconds": 0.0091,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-007-wholesaler",
@@ -291,8 +300,9 @@
       "f1": 0.9626168224299064,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0088,
-      "error": null
+      "seconds": 0.0152,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-008-wholesaler",
@@ -301,8 +311,9 @@
       "f1": 0.9315068493150684,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0052,
-      "error": null
+      "seconds": 0.0054,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-009-wholesaler",
@@ -311,8 +322,9 @@
       "f1": 0.98,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0058,
-      "error": null
+      "seconds": 0.006,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-010-wholesaler",
@@ -321,8 +333,9 @@
       "f1": 0.9519650655021834,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0097,
-      "error": null
+      "seconds": 0.0096,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-011-wholesaler",
@@ -331,8 +344,9 @@
       "f1": 0.9905660377358491,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0087,
-      "error": null
+      "seconds": 0.0093,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-012-wholesaler",
@@ -341,8 +355,9 @@
       "f1": 0.9882352941176471,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0109,
-      "error": null
+      "seconds": 0.0076,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-013-wholesaler",
@@ -351,8 +366,9 @@
       "f1": 0.9722222222222222,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0062,
-      "error": null
+      "seconds": 0.0054,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-014-wholesaler",
@@ -361,8 +377,9 @@
       "f1": 0.9871794871794872,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0117,
-      "error": null
+      "seconds": 0.0073,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-015-wholesaler",
@@ -371,18 +388,20 @@
       "f1": 0.9315068493150684,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0051,
-      "error": null
+      "seconds": 0.0467,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-016-cash_carry",
       "sha256": "3918f1f488ede0149cda5e310a78d8c5a93a9073ceddf094d231bc86a0a8c055",
       "predicted": true,
-      "f1": 0.880597014925373,
+      "f1": 0.8888888888888888,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0057,
-      "error": null
+      "seconds": 0.0071,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-017-cash_carry",
@@ -391,8 +410,9 @@
       "f1": 0.8855721393034827,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0082,
-      "error": null
+      "seconds": 0.008,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-018-cash_carry",
@@ -401,8 +421,9 @@
       "f1": 0.896551724137931,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0078,
-      "error": null
+      "seconds": 0.0073,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-019-cash_carry",
@@ -411,8 +432,9 @@
       "f1": 0.9361702127659575,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0058,
-      "error": null
+      "seconds": 0.0049,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-020-cash_carry",
@@ -421,8 +443,9 @@
       "f1": 0.9361702127659575,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0042,
-      "error": null
+      "seconds": 0.0046,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-021-cash_carry",
@@ -431,8 +454,9 @@
       "f1": 0.9323308270676691,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0413,
-      "error": null
+      "seconds": 0.0057,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-022-cash_carry",
@@ -441,8 +465,9 @@
       "f1": 0.9345794392523363,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0049,
-      "error": null
+      "seconds": 0.0051,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-023-cash_carry",
@@ -451,8 +476,9 @@
       "f1": 0.9345794392523363,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0043,
-      "error": null
+      "seconds": 0.0051,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-024-cash_carry",
@@ -461,8 +487,9 @@
       "f1": 0.9104477611940298,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0054,
-      "error": null
+      "seconds": 0.0059,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-025-cash_carry",
@@ -471,8 +498,9 @@
       "f1": 0.826086956521739,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0056,
-      "error": null
+      "seconds": 0.0067,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-026-cash_carry",
@@ -481,8 +509,9 @@
       "f1": 0.9052631578947369,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0041,
-      "error": null
+      "seconds": 0.0048,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-027-cash_carry",
@@ -491,8 +520,9 @@
       "f1": 0.9024390243902439,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0038,
-      "error": null
+      "seconds": 0.0047,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-028-cash_carry",
@@ -501,8 +531,9 @@
       "f1": 0.8985507246376812,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0035,
-      "error": null
+      "seconds": 0.0042,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-029-receipt",
@@ -511,8 +542,9 @@
       "f1": 0.888888888888889,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.003,
-      "error": null
+      "seconds": 0.0031,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-030-receipt",
@@ -521,8 +553,9 @@
       "f1": 0.8923076923076924,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0028,
-      "error": null
+      "seconds": 0.0034,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-031-receipt",
@@ -531,8 +564,9 @@
       "f1": 0.8979591836734693,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0036,
-      "error": null
+      "seconds": 0.004,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-032-receipt",
@@ -541,8 +575,9 @@
       "f1": 0.896551724137931,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0034,
-      "error": null
+      "seconds": 0.0036,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-033-receipt",
@@ -551,8 +586,9 @@
       "f1": 0.8947368421052632,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0031,
-      "error": null
+      "seconds": 0.0035,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-034-receipt",
@@ -561,8 +597,9 @@
       "f1": 0.8923076923076924,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0032,
-      "error": null
+      "seconds": 0.0036,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-035-receipt",
@@ -571,8 +608,9 @@
       "f1": 0.8837209302325582,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0036,
-      "error": null
+      "seconds": 0.0027,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-036-receipt",
@@ -581,8 +619,9 @@
       "f1": 0.8923076923076924,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0059,
-      "error": null
+      "seconds": 0.0033,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-037-receipt",
@@ -591,8 +630,9 @@
       "f1": 0.8947368421052632,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0046,
-      "error": null
+      "seconds": 0.0033,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-038-receipt",
@@ -601,8 +641,9 @@
       "f1": 0.8923076923076924,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0069,
-      "error": null
+      "seconds": 0.0033,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-039-receipt",
@@ -611,8 +652,9 @@
       "f1": 0.8837209302325582,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0028,
-      "error": null
+      "seconds": 0.0027,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-040-receipt",
@@ -622,7 +664,8 @@
       "fully_correct": false,
       "needs_review": true,
       "seconds": 0.003,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-029-receipt-photo",
@@ -631,8 +674,9 @@
       "f1": 0.0,
       "fully_correct": false,
       "needs_review": null,
-      "seconds": 0.0,
-      "error": null
+      "seconds": 0.0001,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-030-receipt-photo",
@@ -642,7 +686,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-031-receipt-photo",
@@ -652,7 +697,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-032-receipt-photo",
@@ -662,7 +708,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-033-receipt-photo",
@@ -672,7 +719,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-034-receipt-photo",
@@ -682,7 +730,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-035-receipt-photo",
@@ -692,7 +741,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-036-receipt-photo",
@@ -702,7 +752,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-037-receipt-photo",
@@ -711,8 +762,9 @@
       "f1": 0.0,
       "fully_correct": false,
       "needs_review": null,
-      "seconds": 0.0,
-      "error": null
+      "seconds": 0.0001,
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-038-receipt-photo",
@@ -722,7 +774,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-039-receipt-photo",
@@ -732,7 +785,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-040-receipt-photo",
@@ -742,7 +796,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-001-wholesaler-photo",
@@ -752,7 +807,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-002-wholesaler-photo",
@@ -762,7 +818,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-003-wholesaler-photo",
@@ -772,7 +829,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-004-wholesaler-photo",
@@ -782,7 +840,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-005-wholesaler-photo",
@@ -792,7 +851,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-006-wholesaler-photo",
@@ -802,7 +862,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-007-wholesaler-photo",
@@ -812,7 +873,8 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "syn-008-wholesaler-photo",
@@ -822,177 +884,195 @@
       "fully_correct": false,
       "needs_review": null,
       "seconds": 0.0,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.01a",
       "sha256": "de9730cea801741234099149884c8df7c05cc3f54bf4016b1a14ba83d136f944",
       "predicted": true,
-      "f1": 0.7692307692307692,
+      "f1": 0.8717948717948718,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0044,
-      "error": null
+      "seconds": 0.0045,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.02a",
       "sha256": "d8a1465bbcad5c9e99f5c6d493c0238c17c26793a9c881c1c88c69f59a3708a5",
       "predicted": true,
-      "f1": 0.8666666666666667,
+      "f1": 0.9333333333333333,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.004,
-      "error": null
+      "seconds": 0.0045,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.03a",
       "sha256": "a71df35b9b25d25cfede3dcf46e8bd0dc7bd8f8465d66d15a26f63c78b6dfd3e",
       "predicted": true,
-      "f1": 0.8292682926829269,
+      "f1": 0.9268292682926829,
       "fully_correct": false,
       "needs_review": false,
       "seconds": 0.0045,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.04a",
       "sha256": "6d2452b49c5152df05d3fa74e70c7c01b8fd14a26505df7dafed23553bde3fde",
       "predicted": true,
-      "f1": 0.8461538461538461,
+      "f1": 0.9230769230769231,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0036,
-      "error": null
+      "seconds": 0.0043,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.05a",
       "sha256": "cd41b1dbbae44e4e3c4e318cd7ca4ee3245f3a92d82d5b450f6bb3ee149298c8",
       "predicted": true,
-      "f1": 0.8666666666666666,
+      "f1": 0.967741935483871,
       "fully_correct": false,
-      "needs_review": true,
-      "seconds": 0.005,
-      "error": null
+      "needs_review": false,
+      "seconds": 0.0049,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.06a",
       "sha256": "e7b0e53c1cf345d4288c5dc74a6cd5e90bd6aa7c44e49abb42714fd033646092",
       "predicted": true,
-      "f1": 0.9010989010989012,
+      "f1": 0.9795918367346939,
       "fully_correct": false,
-      "needs_review": true,
-      "seconds": 0.006,
-      "error": null
+      "needs_review": false,
+      "seconds": 0.0063,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.07a",
       "sha256": "22abab90bcf80189dc0351e97dbde7f2f60402b5b0116d39033ed4fd7ebc9f55",
       "predicted": true,
-      "f1": 0.8799999999999999,
+      "f1": 0.9230769230769231,
       "fully_correct": false,
-      "needs_review": true,
-      "seconds": 0.0037,
-      "error": null
+      "needs_review": false,
+      "seconds": 0.004,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.08a",
       "sha256": "3d44a0bf60f495df21c66acbd92575adfacc57dacf144d267a407863098a964a",
       "predicted": true,
-      "f1": 0.7857142857142857,
+      "f1": 0.8571428571428571,
       "fully_correct": false,
       "needs_review": false,
       "seconds": 0.0041,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.09a",
       "sha256": "ce841647f11021f28f0ed9ea190b91347a505f2548cb9e578453d52dffeb27ce",
       "predicted": true,
-      "f1": 0.8571428571428571,
+      "f1": 0.9285714285714286,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0045,
-      "error": null
+      "seconds": 0.004,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.10a",
       "sha256": "9637c455107c0aa531f2c5c7ddd6f3431c7d08ef5f599a2fc3ff15b54e82845b",
       "predicted": true,
-      "f1": 0.8275862068965518,
+      "f1": 0.896551724137931,
       "fully_correct": false,
       "needs_review": false,
       "seconds": 0.0039,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.11a",
       "sha256": "5c4182ee4cb1b4f5f45e7ffe60d92438dbbec3c9056db8cdafabc753b7a3422f",
       "predicted": true,
-      "f1": 0.7999999999999999,
+      "f1": 0.9090909090909091,
       "fully_correct": false,
       "needs_review": false,
       "seconds": 0.0048,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.12a",
       "sha256": "a13db523398cb1d4de625863d646d83343aa8906c9fcdf1e7d32c221767f9252",
       "predicted": true,
-      "f1": 0.7407407407407408,
+      "f1": 0.8641975308641975,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0054,
-      "error": null
+      "seconds": 0.0056,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.13a",
       "sha256": "2349f602692b72374c621f991a79dad1e1f5cd41a9eb699fe617f791f3aab01f",
       "predicted": true,
-      "f1": 0.8299319727891157,
+      "f1": 0.979591836734694,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0088,
-      "error": null
+      "seconds": 0.0079,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.14a",
       "sha256": "b0a5dabf20cd7ee0b3cc445c5c87d8d3bdba6c4900820be356410b3d983b98aa",
       "predicted": true,
-      "f1": 0.8205128205128205,
+      "f1": 0.9230769230769231,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0053,
-      "error": null
+      "seconds": 0.0046,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.17a",
       "sha256": "de9730cea801741234099149884c8df7c05cc3f54bf4016b1a14ba83d136f944",
       "predicted": true,
-      "f1": 0.7692307692307692,
+      "f1": 0.8717948717948718,
       "fully_correct": false,
       "needs_review": false,
-      "seconds": 0.0054,
-      "error": null
+      "seconds": 0.0045,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.18a",
       "sha256": "cd41b1dbbae44e4e3c4e318cd7ca4ee3245f3a92d82d5b450f6bb3ee149298c8",
       "predicted": true,
-      "f1": 0.8666666666666666,
+      "f1": 0.967741935483871,
       "fully_correct": false,
-      "needs_review": true,
-      "seconds": 0.0049,
-      "error": null
+      "needs_review": false,
+      "seconds": 0.005,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.19a",
       "sha256": "cd41b1dbbae44e4e3c4e318cd7ca4ee3245f3a92d82d5b450f6bb3ee149298c8",
       "predicted": true,
-      "f1": 0.8666666666666666,
+      "f1": 0.967741935483871,
       "fully_correct": false,
-      "needs_review": true,
-      "seconds": 0.0047,
-      "error": null
+      "needs_review": false,
+      "seconds": 0.0048,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.20a",
@@ -1001,48 +1081,53 @@
       "f1": 0.7647058823529412,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0046,
-      "error": null
+      "seconds": 0.0048,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-01.21a",
       "sha256": "1a0a85f5ff9f433fc6431a11e6cf14104ea1bc05b37573b480c2ef8dadf9471a",
       "predicted": true,
-      "f1": 0.8275862068965517,
+      "f1": 0.8666666666666666,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0041,
-      "error": null
+      "seconds": 0.0043,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-03.03a",
       "sha256": "e6057eeed70e6589a7a109573a39d9c8fa2d8fc0aab36d601aabd666ab03c1b2",
       "predicted": true,
-      "f1": 0.8571428571428571,
+      "f1": 0.9714285714285714,
       "fully_correct": false,
       "needs_review": false,
       "seconds": 0.0049,
-      "error": null
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-03.05a",
       "sha256": "d57ba2f94b6a0f5ed1748823ec7b4681281125bcb43f681955dbb72ae89571c9",
       "predicted": true,
-      "f1": 0.5555555555555556,
+      "f1": 0.5945945945945945,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0059,
-      "error": null
+      "seconds": 0.0064,
+      "error": null,
+      "details": null
     },
     {
       "id": "kosit-03.06a",
       "sha256": "8716da99e3429bf27ab9a81a020b96734233c3d52500891448dfefa2d56513f0",
       "predicted": true,
-      "f1": 0.7368421052631579,
+      "f1": 0.8275862068965517,
       "fully_correct": false,
       "needs_review": true,
-      "seconds": 0.0051,
-      "error": null
+      "seconds": 0.0055,
+      "error": null,
+      "details": null
     }
   ]
 }

@@ -99,24 +99,7 @@ def save_invoice(
                 # Keep the extractor's untouched output (JSON: Decimals as strings, dates as ISO text).
                 raw_extraction=raw_extraction if raw_extraction is not None else data.model_dump(mode="json"),
             )
-            invoice = Invoice(
-                document=document,
-                supplier=supplier,
-                document_type=data.document_type.value,
-                invoice_number=data.invoice_number,
-                issue_date=data.issue_date,
-                delivery_date=data.delivery_date,
-                currency=data.currency,
-                prices_include_vat=data.prices_include_vat,
-                allowance_total=data.allowance_total,
-                charge_total=data.charge_total,
-                net_total=data.net_total,
-                vat_total=data.vat_total,
-                gross_total=data.gross_total,
-                # Schema field names are the column names, so each line maps 1:1 onto a row.
-                lines=[InvoiceLine(**line.model_dump()) for line in data.lines],
-                tax_totals=[InvoiceTaxTotal(**entry.model_dump()) for entry in data.vat_breakdown],
-            )
+            invoice = _new_invoice(document, supplier, data)
             session.add(invoice)
             session.flush()  # run the INSERTs inside the savepoint, so violations surface here
     except IntegrityError as error:
@@ -124,11 +107,90 @@ def save_invoice(
         if constraint == "uq_documents_sha256":
             raise DuplicateDocumentError(f"This file is already stored (sha256 {meta.sha256[:12]}...)") from error
         if constraint == "uq_invoices_supplier_id_invoice_number":
-            raise DuplicateInvoiceError(
-                f"Invoice {data.invoice_number!r} from {data.supplier.name!r} is already stored"
-            ) from error
+            raise _duplicate_invoice(data) from error
         raise  # any other violation is a bug, not a duplicate: let it surface
     return invoice
+
+
+def save_invoice_for_document(
+    session: Session,
+    document: Document,
+    data: InvoiceData,
+    *,
+    extraction_method: str,
+    extraction_ms: int,
+    raw_extraction: dict[str, Any],
+) -> Invoice:
+    """Attach an invoice to a document that was stored earlier with status 'received' (step 5: OCR + LLM).
+
+    In a savepoint like save_invoice: if the supplier's invoice number is already stored (e.g. the
+    photo of a paper copy of an e-invoice), nothing changes and DuplicateInvoiceError is raised.
+    """
+    try:
+        with session.begin_nested():
+            supplier = get_or_create_supplier(session, data.supplier)
+            invoice = _new_invoice(document, supplier, data)
+            session.add(invoice)
+            document.status = "extracted"
+            document.extraction_method = extraction_method
+            document.extraction_ms = extraction_ms
+            document.raw_extraction = raw_extraction
+            document.error = None
+            session.flush()
+    except IntegrityError as error:
+        if _violated_constraint(error) == "uq_invoices_supplier_id_invoice_number":
+            raise _duplicate_invoice(data) from error
+        raise
+    return invoice
+
+
+def received_documents(session: Session, *, limit: int | None = None) -> list[Document]:
+    """Documents waiting for OCR + LLM extraction, oldest first."""
+    query = select(Document).where(Document.status == "received").order_by(Document.received_at, Document.id)
+    return list(session.scalars(query.limit(limit) if limit else query))
+
+
+def mark_document_failed(
+    session: Session,
+    document: Document,
+    error: str,
+    *,
+    method: str | None = None,
+    raw_extraction: dict[str, Any] | None = None,
+) -> None:
+    """The document could not become an invoice; `error` says why, `raw_extraction` keeps what was read."""
+    document.status = "failed"
+    document.error = error
+    if method:
+        document.extraction_method = method
+    if raw_extraction is not None:
+        document.raw_extraction = raw_extraction
+    session.flush()
+
+
+def _new_invoice(document: Document, supplier: Supplier, data: InvoiceData) -> Invoice:
+    return Invoice(
+        document=document,
+        supplier=supplier,
+        document_type=data.document_type.value,
+        invoice_number=data.invoice_number,
+        issue_date=data.issue_date,
+        delivery_date=data.delivery_date,
+        currency=data.currency,
+        prices_include_vat=data.prices_include_vat,
+        allowance_total=data.allowance_total,
+        charge_total=data.charge_total,
+        net_total=data.net_total,
+        vat_total=data.vat_total,
+        gross_total=data.gross_total,
+        # Schema field names are the column names, so each line maps 1:1 onto a row.
+        lines=[InvoiceLine(**line.model_dump()) for line in data.lines],
+        tax_totals=[InvoiceTaxTotal(**entry.model_dump()) for entry in data.vat_breakdown],
+    )
+
+
+def _duplicate_invoice(data: InvoiceData) -> DuplicateInvoiceError:
+    return DuplicateInvoiceError(f"Invoice {data.invoice_number!r} from {data.supplier.name!r} is already stored")
 
 
 def save_document(session: Session, meta: DocumentMeta, *, status: str, error: str | None = None) -> Document:

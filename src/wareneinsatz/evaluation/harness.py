@@ -3,6 +3,8 @@
     report = evaluate(Path("eval/dataset"), "pdf-text-baseline")
     write_report(report, Path("eval/results"))   # Markdown to read, JSON to compare runs
 
+    evaluate(Path("eval/dataset"), get_extractor("llm-hybrid"), only="photo", limit=5)   # a quick subset
+
 Besides field scores it measures what matters in operation: how many documents got a result at
 all, how many were completely correct, how many would need a person (the step 3 validation finds
 an error), and the time per document.
@@ -13,6 +15,7 @@ from __future__ import annotations
 import json
 import statistics
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -20,7 +23,7 @@ from typing import Any
 
 from wareneinsatz import __version__
 from wareneinsatz.evaluation.dataset import Dataset, DatasetItem, load_dataset
-from wareneinsatz.evaluation.extractors import EXTRACTORS
+from wareneinsatz.evaluation.extractors import Extractor, get_extractor
 from wareneinsatz.evaluation.metrics import (
     HEADER_FIELDS,
     LINE_FIELDS,
@@ -30,6 +33,7 @@ from wareneinsatz.evaluation.metrics import (
     score_document,
     summarise,
 )
+from wareneinsatz.reading.llm import LlmUnavailable
 from wareneinsatz.validation import validate_invoice
 
 
@@ -41,6 +45,7 @@ class ItemResult:
     score: DocumentScore
     needs_review: bool | None  # validation found an error in the prediction (None: no prediction)
     error: str | None = None  # an exception inside the extractor
+    details: dict[str, Any] | None = None  # step 5 readers: tokens, timings, whether the reply was valid
 
 
 @dataclass
@@ -48,6 +53,9 @@ class EvaluationReport:
     extractor: str
     dataset: Dataset
     results: list[ItemResult]
+    settings: dict[str, Any] = field(default_factory=dict)  # model, OCR engine, prompt version ...
+    label: str | None = None  # report file name part, e.g. "llm-hybrid_qwen3-vl-8b-instruct"
+    subset: dict[str, Any] = field(default_factory=dict)  # {"only": "photo", "limit": 5} if not the whole set
     created: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def groups(self) -> dict[str, list[ItemResult]]:
@@ -66,7 +74,9 @@ class EvaluationReport:
         times = sorted(r.seconds for r in self.results)
         return {
             "extractor": self.extractor,
+            "settings": self.settings,
             "dataset": {"name": self.dataset.name, "seed": self.dataset.seed, "documents": len(self.results)},
+            "subset": self.subset,
             "created": self.created.isoformat(timespec="seconds"),
             "version": __version__,
             "scores": {
@@ -86,6 +96,7 @@ class EvaluationReport:
                 "p95": times[max(0, int(len(times) * 0.95) - 1)] if times else None,
                 "mean": statistics.fmean(times) if times else None,
             },
+            "language_model": _llm_summary([r.details for r in self.results if r.details]),
             "groups": {
                 name: {
                     "documents": len(results),
@@ -105,39 +116,85 @@ class EvaluationReport:
                     "needs_review": r.needs_review,
                     "seconds": round(r.seconds, 4),
                     "error": r.error,
+                    "details": r.details,
                 }
                 for r in self.results
             ],
         }
 
 
-def evaluate(dataset_dir: Path, extractor_name: str, *, today: date | None = None) -> EvaluationReport:
-    if extractor_name not in EXTRACTORS:
-        raise ValueError(f"Unknown extractor {extractor_name!r}; choose one of {', '.join(EXTRACTORS)}")
-    extractor = EXTRACTORS[extractor_name]
+Progress = Callable[[int, int, "ItemResult"], None]  # (number, total, result) after each document
+
+
+def select_items(items: list[DatasetItem], only: str | None, limit: int | None) -> list[DatasetItem]:
+    """A subset: `only` matches a kind, source, template or id ("photo", "kosit", "receipt").
+    `limit` keeps the first n documents."""
+    chosen = [item for item in items if not only or only in (item.kind, item.source, item.template, item.id)]
+    return chosen[:limit] if limit else chosen
+
+
+def evaluate(
+    dataset_dir: Path,
+    extractor: str | Extractor,
+    *,
+    today: date | None = None,
+    only: str | None = None,
+    limit: int | None = None,
+    progress: Progress | None = None,
+) -> EvaluationReport:
+    if isinstance(extractor, str):
+        extractor = get_extractor(extractor)
     dataset = load_dataset(dataset_dir)
+    items = select_items(dataset.items, only, limit)
+    if not items:
+        raise ValueError(f"No documents in {dataset_dir} match --only {only!r}")
     results = []
-    for item in dataset.items:
+    for number, item in enumerate(items, start=1):
         truth = dataset.load_truth(dataset_dir, item)
         content = (dataset_dir / item.document).read_bytes()
         error = None
         started = time.perf_counter()
         try:
             prediction = truth if extractor.uses_truth else extractor.run(content)
+        except LlmUnavailable:
+            raise  # the model server is gone: every further document would fail the same way
         except Exception as exc:  # a crash on one document is a result, not the end of the run
             prediction, error = None, f"{type(exc).__name__}: {exc}"
         seconds = time.perf_counter() - started
-        results.append(
-            ItemResult(
-                item=item,
-                predicted=prediction is not None,
-                seconds=seconds,
-                score=score_document(truth, prediction),
-                needs_review=_needs_review(prediction, today),
-                error=error,
-            )
+        result = ItemResult(
+            item=item,
+            predicted=prediction is not None,
+            seconds=seconds,
+            score=score_document(truth, prediction),
+            needs_review=_needs_review(prediction, today),
+            error=error,
+            details=extractor.details() if extractor.details else None,
         )
-    return EvaluationReport(extractor_name, dataset, results)
+        results.append(result)
+        if progress:
+            progress(number, len(items), result)
+    subset = {key: value for key, value in {"only": only, "limit": limit}.items() if value}
+    return EvaluationReport(extractor.name, dataset, results, extractor.settings, extractor.label, subset)
+
+
+def _llm_summary(details: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Medians over the documents the language model answered for."""
+    if not details:
+        return None
+
+    def median(key: str) -> float | None:
+        values = [d[key] for d in details if d.get(key) is not None]
+        return round(statistics.median(values), 3) if values else None
+
+    return {
+        "replies": len(details),
+        "valid_invoices": sum(bool(d.get("valid")) for d in details),
+        "median_prompt_tokens": median("prompt_tokens"),
+        "median_output_tokens": median("output_tokens"),
+        "median_tokens_per_second": median("tokens_per_second"),
+        "median_llm_seconds": median("llm_seconds"),
+        "median_ocr_seconds": median("ocr_seconds"),
+    }
 
 
 def _needs_review(prediction: Any, today: date | None) -> bool | None:
@@ -159,7 +216,11 @@ def _scores(counts: FieldCounts) -> dict[str, float | None]:
 
 def write_report(report: EvaluationReport, out_dir: Path) -> tuple[Path, Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    stem = f"{report.created:%Y-%m-%d}_{report.extractor}_{report.dataset.name}"
+    stem = f"{report.created:%Y-%m-%d}_{report.label or report.extractor}_{report.dataset.name}"
+    if report.subset.get("only"):
+        stem += f"_{report.subset['only']}"
+    if report.subset.get("limit"):
+        stem += f"_first{report.subset['limit']}"
     markdown, data = out_dir / f"{stem}.md", out_dir / f"{stem}.json"
     markdown.write_text(render_markdown(report), encoding="utf-8")
     data.write_text(json.dumps(report.summary(), indent=2, ensure_ascii=False), encoding="utf-8")
@@ -177,6 +238,12 @@ def render_markdown(report: EvaluationReport) -> str:
         f"Dataset **{s['dataset']['name']}** (seed {s['dataset']['seed']}), {n} documents · "
         f"run {s['created']} · wareneinsatz {s['version']}",
         "",
+    ]
+    if s["settings"]:
+        out += ["Settings: " + " · ".join(f"{k} `{v}`" for k, v in s["settings"].items() if v is not None), ""]
+    if s["subset"]:
+        out += ["Subset: " + ", ".join(f"{k} {v}" for k, v in s["subset"].items()), ""]
+    out += [
         "| Fields | Precision | Recall | F1 |",
         "|---|---:|---:|---:|",
     ]
@@ -192,8 +259,14 @@ def render_markdown(report: EvaluationReport) -> str:
         f"- **Documents with a result:** {docs['with_result']} of {n}",
         f"- **Completely correct:** {docs['fully_correct']} of {n}",
         f"- **Would need review** (validation error in the result): {docs['needs_review']} of {docs['with_result']}",
-        f"- **Time per document:** median {_ms(timing['median'])}, 95th percentile {_ms(timing['p95'])}",
+        f"- **Time per document:** median {_duration(timing['median'])}, 95th percentile {_duration(timing['p95'])}",
     ]
+    if llm := s["language_model"]:
+        out.append(
+            f"- **Language model:** {llm['valid_invoices']} of {llm['replies']} replies gave a complete, valid "
+            f"invoice · median {llm['median_output_tokens']} output tokens at {llm['median_tokens_per_second']} "
+            f"tokens/s · median {llm['median_prompt_tokens']} input tokens"
+        )
     if docs["errors"]:
         out.append(f"- **Extractor crashed** on {docs['errors']} documents (see the JSON file)")
     out += [
@@ -228,5 +301,7 @@ def _pct(value: float | None) -> str:
     return "–" if value is None else f"{value:.1%}"
 
 
-def _ms(seconds: float | None) -> str:
-    return "–" if seconds is None else f"{seconds * 1000:.0f} ms"
+def _duration(seconds: float | None) -> str:
+    if seconds is None:
+        return "–"
+    return f"{seconds * 1000:.0f} ms" if seconds < 1 else f"{seconds:.1f} s"

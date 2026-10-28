@@ -7,8 +7,13 @@ import pytest
 from sqlalchemy import text
 
 from wareneinsatz import __version__
-from wareneinsatz.cli import find_files, main, run_ingest, run_review
+from wareneinsatz.cli import find_files, main, run_extract, run_ingest, run_review
+from wareneinsatz.evaluation.photo import photo_of
+from wareneinsatz.evaluation.render import render_pdf
+from wareneinsatz.evaluation.synthetic import InvoiceGenerator, Layout
+from wareneinsatz.ingest.extract import parse_einvoice_xml
 from wareneinsatz.ingest.store import DocumentStore
+from wareneinsatz.reading import DocumentReader, LlmUnavailable, Mode
 
 
 def test_version(capsys):
@@ -56,7 +61,8 @@ def test_ingest_end_to_end(clean_database, samples, tmp_path, make_pdf):
     assert lines[1].startswith("duplicate")
     assert lines[2].startswith("needs OCR")
     assert lines[3].startswith("failed")
-    assert lines[-1] == "4 file(s): 1 approved, 0 review, 1 needs OCR, 1 duplicate, 1 failed"
+    assert lines[-2] == "4 file(s): 1 approved, 0 review, 1 needs OCR, 1 duplicate, 1 failed"
+    assert lines[-1].endswith("uv run wareneinsatz extract")  # what to do with the scan
     assert exit_code == 1  # one file failed
 
 
@@ -84,3 +90,94 @@ def test_review_with_nothing_to_do(clean_database):
     out = io.StringIO()
     assert run_review(engine=clean_database, out=out) == 0
     assert out.getvalue() == "No invoices waiting for review.\n"
+
+
+# --- step 5: extract ------------------------------------------------------------------------------------
+
+
+def _store_photo(engine, tmp_path, content: bytes) -> DocumentStore:
+    """Ingest a photo: it is stored with status 'received' and waits for extract."""
+    (tmp_path / "bon.jpg").write_bytes(content)
+    store = DocumentStore(tmp_path / "store")
+    out = io.StringIO()
+    run_ingest([tmp_path / "bon.jpg"], engine=engine, store=store, out=out)
+    assert out.getvalue().startswith("needs OCR")
+    return store
+
+
+def _rows(engine, sql: str):
+    with engine.connect() as connection:
+        return connection.execute(text(sql)).all()
+
+
+def test_extract_reads_waiting_photos_and_sends_them_to_review(clean_database, tmp_path, fake_llm, printed_of):
+    receipt = InvoiceGenerator(5).generate("receipt")
+    store = _store_photo(clean_database, tmp_path, photo_of(render_pdf(receipt.data, receipt.layout), seed=3))
+    reader = DocumentReader(fake_llm(printed_of(receipt.data, receipt.layout).model_dump_json()), Mode.VISION)
+
+    out = io.StringIO()
+    assert run_extract(engine=clean_database, store=store, reader=reader, out=out) == 0
+    printed = out.getvalue()
+    assert "Reading 1 document(s) with fake:fake-vl:1b, vision mode" in printed
+    assert f"review     bon.jpg  {receipt.data.supplier.name}" in printed
+    assert printed.rstrip().endswith("1 document(s): 1 review")
+
+    [(status, method, raw)] = _rows(clean_database, "SELECT status, extraction_method, raw_extraction FROM documents")
+    assert (status, method) == ("extracted", "llm-vision")
+    assert raw["printed"]["gross_total"] and raw["reader"]["prompt_version"]  # the untouched reply + settings
+    # Read by a model, so never approved automatically, even without validation errors.
+    assert _rows(clean_database, "SELECT status, approved_by FROM invoices") == [("needs_review", None)]
+
+    out = io.StringIO()
+    assert run_extract(engine=clean_database, store=store, reader=reader, out=out) == 0
+    assert out.getvalue() == "No documents waiting for OCR.\n"
+
+
+def test_extract_marks_unreadable_documents_as_failed(clean_database, tmp_path, fake_llm, printed_of):
+    receipt = InvoiceGenerator(6).generate("receipt")
+    store = _store_photo(clean_database, tmp_path, photo_of(render_pdf(receipt.data, receipt.layout), seed=4))
+    printed = printed_of(receipt.data, receipt.layout).model_copy(update={"lines": [], "gross_total": None})
+    reader = DocumentReader(fake_llm(printed.model_dump_json()), Mode.VISION)
+
+    out = io.StringIO()
+    assert run_extract(engine=clean_database, store=store, reader=reader, out=out) == 1
+    assert "failed     bon.jpg  Not a complete invoice: lines" in out.getvalue()
+    [(status, error, raw)] = _rows(clean_database, "SELECT status, error, raw_extraction FROM documents")
+    assert status == "failed" and error.startswith("Not a complete invoice") and raw["printed"]
+
+
+def test_extract_finds_the_photo_of_an_invoice_that_is_already_stored(
+    clean_database, samples, tmp_path, fake_llm, printed_of
+):
+    xml = samples / "einvoices" / "musterfrisch_xrechnung_cii.xml"
+    store = DocumentStore(tmp_path / "store")
+    run_ingest([xml], engine=clean_database, store=store, out=io.StringIO())
+    data, _syntax, _profile = parse_einvoice_xml(xml.read_bytes())
+    invoice = InvoiceGenerator(1).generate("wholesaler")
+    (tmp_path / "kopie.jpg").write_bytes(photo_of(render_pdf(invoice.data, invoice.layout), seed=1))
+    run_ingest([tmp_path / "kopie.jpg"], engine=clean_database, store=store, out=io.StringIO())
+    # The model reads the paper copy of the e-invoice: same supplier, same invoice number.
+    reader = DocumentReader(fake_llm(printed_of(data, Layout("wholesaler", {})).model_dump_json()), Mode.VISION)
+
+    out = io.StringIO()
+    run_extract(engine=clean_database, store=store, reader=reader, out=out)
+    assert "duplicate  kopie.jpg  Invoice 'RE-2026-104233'" in out.getvalue()
+    statuses = _rows(clean_database, "SELECT filename, status FROM documents ORDER BY id")
+    assert statuses == [("musterfrisch_xrechnung_cii.xml", "extracted"), ("kopie.jpg", "failed")]
+    assert len(_rows(clean_database, "SELECT id FROM invoices")) == 1
+
+
+def test_extract_stops_when_the_model_server_is_gone(clean_database, tmp_path, fake_llm):
+    receipt = InvoiceGenerator(7).generate("receipt")
+    store = _store_photo(clean_database, tmp_path, photo_of(render_pdf(receipt.data, receipt.layout), seed=5))
+
+    class GoneLlm(fake_llm):
+        def complete(self, **request):
+            raise LlmUnavailable("Ollama is not reachable at http://localhost:11434")
+
+    out = io.StringIO()
+    assert (
+        run_extract(engine=clean_database, store=store, reader=DocumentReader(GoneLlm("{}"), Mode.VISION), out=out) == 2
+    )
+    assert "Stopped: Ollama is not reachable" in out.getvalue()
+    assert _rows(clean_database, "SELECT status FROM documents") == [("received",)]  # tried again next time

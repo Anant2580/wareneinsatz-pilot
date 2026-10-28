@@ -7,7 +7,7 @@
 
 **A food-cost copilot for restaurants.** It reads supplier invoices (XRechnung and ZUGFeRD e-invoices, PDFs and phone photos of paper receipts), turns them into ingredient prices and shows what each dish really costs, and which dishes lose margin when prices go up.
 
-> 🚧 **Work in progress.** Steps 1–4 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review, and an evaluation set with a scoring harness is ready for the PDF and photo extractor. See the [roadmap](#roadmap).
+> 🚧 **Work in progress.** Steps 1–4 of 9 are done and step 5 is built: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model, measured on an evaluation set of 82 documents. See the [roadmap](#roadmap).
 
 ## Why
 
@@ -21,7 +21,7 @@ E-invoices make part of this machine-readable: every German business has had to 
 flowchart TB
     A["Supplier documents<br/>XRechnung · ZUGFeRD · PDF · photo"] --> B{"Format"}
     B -->|"XML / ZUGFeRD"| C["Exact XML parser"]
-    B -->|"PDF / photo"| D["OCR + LLM<br/>structured output"]
+    B -->|"PDF / photo"| D["Tesseract OCR + Qwen3-VL<br/>local, structured output"]
     C --> E["Canonical invoice<br/>EN 16931 schema"]
     D --> E
     E --> F["Validation<br/>totals · VAT · units"]
@@ -40,7 +40,7 @@ flowchart TB
 - [x] **Step 2 – E-invoices:** XRechnung (UBL and CII) and ZUGFeRD/Factur-X PDFs read exactly, tested on the official KoSIT test invoices; command `wareneinsatz ingest`
 - [x] **Step 3 – Validation:** totals, VAT, units, dates and supplier tax IDs checked; clean e-invoices approved automatically, the rest goes to review (`wareneinsatz review`)
 - [x] **Step 4 – Evaluation set:** 82 labelled documents (synthetic invoices and receipts, phone-photo versions, official KoSIT invoices), field-level precision/recall/F1, rule-based baseline
-- [ ] **Step 5 – PDFs and photos:** OCR + LLM extraction into the same schema, measured on the evaluation set
+- [ ] **Step 5 – PDFs and photos:** OCR + a local vision language model into the same schema (built; measurement on the evaluation set running)
 - [ ] **Step 6 – Ingredient matching** and price history per ingredient and supplier
 - [ ] **Step 7 – Recipe costing and alerts:** food-cost %, gross margin, price jumps, monthly Wareneinsatz
 - [ ] **Step 8 – API and UI:** FastAPI backend; Streamlit upload, review screen and dashboard
@@ -112,9 +112,44 @@ uv run wareneinsatz eval run --extractor pdf-text-baseline # score an extractor,
 
 | Extractor | All fields F1 | Precision | Recall | Completely correct |
 |---|---:|---:|---:|---:|
-| Rule-based baseline (PDF text layer, no OCR, no AI) | 76.5 % | 95.7 % | 63.7 % | 0 of 82 |
+| Rule-based baseline (PDF text layer, no OCR, no AI) | 78.1 % | 97.3 % | 65.2 % | 0 of 82 |
 
 The baseline reads clean text PDFs well but gets nothing from the 20 photos and no document fully right: that is the bar for the OCR + LLM extractor in step 5.
+
+## Reading PDFs and photos (step 5)
+
+Documents without XML (supplier PDFs, scans, phone photos of till receipts) are read by a vision
+language model running on the own computer: [Qwen3-VL](https://ollama.com/library/qwen3-vl) via
+[Ollama](https://ollama.com), with Tesseract OCR. Free, and no invoice leaves the machine.
+
+```bash
+uv run wareneinsatz ingest inbox/      # e-invoices are read exactly; scans and photos wait for OCR
+uv run wareneinsatz extract            # reads the waiting documents with OCR + the language model
+uv run wareneinsatz review             # everything the model read waits for a person
+```
+
+```mermaid
+flowchart LR
+    P["PDF / photo"] --> T["text layer, or<br/>Tesseract OCR<br/>(deskewed, denoised)"]
+    P --> I["page images"]
+    T --> M["Qwen3-VL<br/>JSON schema output:<br/>values as printed"]
+    I --> M
+    M --> C["interpret.py<br/>German numbers · dates<br/>VAT codes · units · gross/net"]
+    C --> V["Validation (step 3)"] --> R["Review"]
+```
+
+- **The model only transcribes.** It returns every value as printed ("1.234,56", "A", "Krt"),
+  forced into a JSON schema. Parsing and every calculation happen in tested Python code: German
+  number formats, VAT codes resolved through the VAT table, the discount row subtracted from the
+  product row, gross or net decided by which printed total the lines add up to.
+- **Lossless by test:** a perfect transcription of any of 202 test invoices gives back every
+  scored field, so every error in a measurement is a reading error of the model.
+- **Three modes** are compared on the evaluation set: text only (PDF text layer or OCR), images
+  only, and both. Model, mode, OCR engine and prompt version are stored with every result.
+- **Always reviewed.** Nothing read by a model is approved automatically. The model's untouched
+  reply is kept, so its accuracy on real invoices can be measured against what the reviewer approved.
+- **Robust batch:** one transaction per document; if the model server is down the batch stops and
+  nothing is lost; a photo of an invoice that already arrived as XML is caught as a duplicate.
 
 ## Design decisions so far
 
@@ -122,6 +157,7 @@ Details and reasons in [docs/decisions.md](docs/decisions.md).
 
 - **One schema for every source.** XML parser and OCR + LLM both produce the same `InvoiceData` model, whose fields follow EN 16931 (the standard behind XRechnung and ZUGFeRD). Everything downstream is written once.
 - **Store what is printed, calculate in code.** Amounts are kept as printed (net or gross); conversions and totals are computed in Python, never by the LLM.
+- **Free and local AI.** An open model on the own computer instead of a paid API: no costs, and supplier prices stay private.
 - **Strict structure, lenient business rules.** Wrong types and unknown fields are rejected; well-formed but suspicious values are stored and flagged for review instead of being lost.
 - **Exact money.** `NUMERIC` in PostgreSQL and `Decimal` in Python, with digit limits that match, so nothing is rounded silently.
 - **The database enforces the rules.** Duplicate files (SHA-256) and duplicate invoices (supplier + invoice number) are caught by unique constraints and turned into clear errors.
@@ -145,6 +181,8 @@ uv run pytest                        # unit tests + database tests
 
 Database tests run against a separate database (`wareneinsatz_test`) and are skipped when `TEST_DATABASE_URL` is empty.
 
+For step 5 (reading PDFs and photos), also install [Ollama](https://ollama.com/download) and Tesseract (macOS: `brew install tesseract tesseract-lang`), then `ollama pull qwen3-vl:8b-instruct`. About 16 GB of RAM are enough; `qwen3-vl:4b-instruct` is smaller and faster. Settings are in `.env.example`.
+
 ## Project structure
 
 ```
@@ -152,8 +190,9 @@ Database tests run against a separate database (`wareneinsatz_test`) and are ski
 │   ├── ingest/           # file type detection, UBL + CII parsers, ZUGFeRD, file store, pipeline
 │   ├── validation.py     # business-rule checks (step 3)
 │   ├── units.py          # UN/ECE unit codes, printed units, conversion to g / ml / piece
+│   ├── reading/          # PDFs and photos: pages, OCR, language model client, interpretation (step 5)
 │   ├── evaluation/       # evaluation set generator, scoring, extractors, harness (step 4)
-│   ├── cli.py            # `wareneinsatz ingest`, `review`, `eval generate`, `eval run`
+│   ├── cli.py            # `wareneinsatz ingest`, `extract`, `review`, `eval generate`, `eval run`
 │   ├── schemas.py        # canonical invoice schema (pydantic)
 │   ├── models.py         # database tables (SQLAlchemy 2)
 │   ├── repository.py     # storing invoices, duplicate detection
@@ -174,7 +213,7 @@ No real supplier or customer data is stored in this repository. Tests use synthe
 
 ## Tech stack
 
-Python 3.12 · pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · defusedxml · pypdf · python-stdnum · ReportLab · Pillow · pypdfium2 · Docker Compose · pytest · ruff · uv · GitHub Actions
+Python 3.12 · pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · Ollama · Qwen3-VL · Tesseract OCR · httpx · defusedxml · pypdf · pypdfium2 · Pillow · python-stdnum · ReportLab · Docker Compose · pytest · ruff · uv · GitHub Actions
 
 ## Author
 

@@ -38,10 +38,13 @@ jobs:
       - name: Install Python 3.12 and the exact versions from uv.lock
         run: uv sync --locked
 
+      - name: Install Tesseract OCR with German (step 5 OCR tests)
+        run: sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr tesseract-ocr-deu
+
       - name: Lint and format check
         run: |
           uv run ruff check .
           uv run ruff format --check .
 
-      - name: Test (schema, repository, migrations)
+      - name: Test (schema, repository, migrations, OCR; the language model is replaced by a fake)
         run: uv run pytest -v

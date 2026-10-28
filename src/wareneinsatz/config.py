@@ -5,8 +5,9 @@ All configuration lives in one place, so no other module reads os.environ direct
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
-from pydantic import field_validator
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,6 +35,17 @@ class Settings(BaseSettings):
     test_database_url: str | None = None
     # Where original files are kept (relative to the folder the app runs in). Never committed to git.
     document_dir: Path = Path("data/documents")
+
+    # Step 5: reading PDFs and photos with OCR + a language model. The defaults are free and local:
+    # Ollama on this computer and Tesseract. Nothing is sent anywhere else.
+    llm_api: Literal["ollama", "openai"] = "ollama"  # "openai" = any OpenAI-compatible server
+    llm_base_url: str = "http://localhost:11434"  # e.g. http://localhost:8080/v1 for llama-server
+    llm_model: str = "qwen3-vl:8b-instruct"
+    llm_api_key: SecretStr | None = None  # only for cloud APIs; lives in .env, never in git
+    llm_timeout_seconds: float = 600
+    reading_mode: Literal["text", "vision", "hybrid"] = "hybrid"
+    ocr_engine: Literal["tesseract", "none"] = "tesseract"
+    ocr_languages: str = "deu+eng"
 
     @field_validator("database_url", "test_database_url")
     @classmethod
