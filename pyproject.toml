@@ -24,7 +24,10 @@ wareneinsatz = "wareneinsatz.cli:main"
 
 [dependency-groups]
 dev = [
+    "pillow>=13.0",           # evaluation set: photo-like versions of invoices
+    "pypdfium2>=5.14",        # evaluation set: rendering PDF pages to images
     "pytest>=9.1",
+    "reportlab>=5.1",         # evaluation set: generating invoice PDFs
     "ruff>=0.17",
 ]
 

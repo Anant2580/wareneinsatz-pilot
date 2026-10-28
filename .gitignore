@@ -16,6 +16,9 @@ dist/
 .ruff_cache/
 .DS_Store
 
+# Generated evaluation set (rebuild with: uv run wareneinsatz eval generate)
+eval/dataset/
+
 # Uploaded documents and private test data (real receipts, employer data) never go into git
 data/documents/
 data/private/

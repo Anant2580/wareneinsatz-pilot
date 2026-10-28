@@ -3,6 +3,8 @@
 uv run wareneinsatz ingest invoice.xml           read one file
 uv run wareneinsatz ingest inbox/ --verbose      a folder (searched recursively), also showing warnings
 uv run wareneinsatz review                       invoices waiting for a person, with the reasons
+uv run wareneinsatz eval generate                build the evaluation set in eval/dataset
+uv run wareneinsatz eval run --extractor NAME    score an extractor, report in eval/results
 uv run wareneinsatz --version
 """
 
@@ -50,12 +52,80 @@ def main(argv: list[str] | None = None) -> int:
 
     commands.add_parser("review", help="list invoices waiting for review, with the reasons")
 
+    evaluation = commands.add_parser("eval", help="evaluation set and accuracy measurement (step 4)")
+    eval_commands = evaluation.add_subparsers(dest="eval_command", required=True)
+    generate = eval_commands.add_parser("generate", help="build the evaluation set (seeded, reproducible)")
+    generate.add_argument("--out", type=Path, default=Path("eval/dataset"))
+    generate.add_argument("--seed", type=int, default=2026)
+    generate.add_argument("--photos", type=int, default=20, help="how many photo versions to create")
+    run = eval_commands.add_parser("run", help="score an extractor on a dataset and write a report")
+    run.add_argument("--extractor", default="pdf-text-baseline", help="oracle, einvoice or pdf-text-baseline")
+    run.add_argument("--dataset", type=Path, default=Path("eval/dataset"))
+    run.add_argument("--out", type=Path, default=Path("eval/results"))
+    template = eval_commands.add_parser("template", help="create a truth file to fill in for your own receipt")
+    template.add_argument("document", type=Path)
+
     args = parser.parse_args(argv)
     if args.command == "ingest":
         return run_ingest(args.paths, verbose=args.verbose)
     if args.command == "review":
         return run_review()
+    if args.command == "eval":
+        return run_eval(args)
     return 2  # argparse already rejects unknown commands; kept for completeness
+
+
+def run_eval(args: argparse.Namespace, out: TextIO | None = None) -> int:
+    """The evaluation commands. Imported here: they need the development dependencies."""
+    out = out or sys.stdout  # looked up now, not when the function was defined (pytest capture)
+    try:
+        from wareneinsatz.evaluation.dataset import generate_dataset, write_truth_template
+        from wareneinsatz.evaluation.harness import evaluate, write_report
+    except ImportError as error:
+        print(f"Evaluation needs the development dependencies ({error.name}). Run: uv sync", file=out)
+        return 2
+
+    if args.eval_command == "generate":
+        dataset = generate_dataset(args.out, seed=args.seed, photos=args.photos, kosit_dir=Path("tests/samples/kosit"))
+        kinds = Counter(f"{item.source} {item.kind}" for item in dataset.items)
+        print(
+            f"{len(dataset.items)} documents in {args.out}: " + ", ".join(f"{n} {k}" for k, n in sorted(kinds.items())),
+            file=out,
+        )
+        return 0
+    if args.eval_command == "template":
+        print(f"Fill in {write_truth_template(args.document)} with what the document shows.", file=out)
+        return 0
+
+    if not args.dataset.exists():
+        print(f"No dataset in {args.dataset}. Create it with: uv run wareneinsatz eval generate", file=out)
+        return 2
+    try:
+        report = evaluate(args.dataset, args.extractor)
+    except ValueError as error:
+        print(error, file=out)
+        return 2
+    markdown, data = write_report(report, args.out)
+    scores = report.summary()["scores"]
+    docs = report.summary()["documents"]
+    print(f"{args.extractor} on {len(report.results)} documents:", file=out)
+    for label, key in [("all fields", "all_fields"), ("header", "header_fields"), ("lines", "line_fields")]:
+        sc = scores[key]
+        print(
+            f"  {label:<11} precision {_pct(sc['precision'])}  recall {_pct(sc['recall'])}  F1 {_pct(sc['f1'])}",
+            file=out,
+        )
+    print(
+        f"  with result {docs['with_result']}, completely correct {docs['fully_correct']}, "
+        f"would need review {docs['needs_review']}",
+        file=out,
+    )
+    print(f"Report: {markdown}", file=out)
+    return 0
+
+
+def _pct(value: float | None) -> str:
+    return "  –  " if value is None else f"{value:6.1%}"
 
 
 def find_files(paths: Iterable[Path]) -> tuple[list[Path], list[Path]]:
@@ -88,12 +158,13 @@ def run_ingest(
     verbose: bool = False,
     engine: Engine | None = None,
     store: DocumentStore | None = None,
-    out: TextIO = sys.stdout,
+    out: TextIO | None = None,
 ) -> int:
     """Ingest every file in its own transaction, so one bad file never undoes the others.
 
     Exit code: 0 all fine, 1 some files failed, 2 database not reachable or not migrated.
     """
+    out = out or sys.stdout  # looked up now, not when the function was defined (pytest capture)
     files, missing = find_files(paths)
     for path in missing:
         print(f"{'missing':<10} {path}  (no such file or folder)", file=out)
@@ -125,8 +196,9 @@ def run_ingest(
     return 1 if counts[Outcome.FAILED] or missing else 0
 
 
-def run_review(*, engine: Engine | None = None, out: TextIO = sys.stdout) -> int:
+def run_review(*, engine: Engine | None = None, out: TextIO | None = None) -> int:
     """Print every invoice with status needs_review and its findings, oldest first."""
+    out = out or sys.stdout  # looked up now, not when the function was defined (pytest capture)
     engine = engine or make_engine()
     try:
         with session_scope(engine) as session:

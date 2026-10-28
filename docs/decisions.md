@@ -165,3 +165,38 @@ value, because senders round differently. Messages show the calculation, e.g.
 **Consequences.** Line discounts and surcharges (BG-27/BG-28) had to be stored (migration `0003`),
 otherwise valid lines with a discount would fail. A wider run on 144 official samples flagged only
 4 invoices, each for a real reason.
+
+## 18. Free tools only
+
+*28 Oct 2026*
+
+**Decision.** Every tool and service is free; a paid service is only acceptable at up to 5 EUR per
+month. Step 4 uses ReportLab, Pillow and pypdfium2, all open source.
+
+**Consequences.** The OCR and LLM choice in step 5 is limited to open-source OCR, local models or
+free API tiers, and the README will say which one was used and what it costs (nothing, or the
+limits of a free tier).
+
+## 19. Build the measurement before the extractor
+
+**Context.** "The AI reads invoices well" is not a result. A number is, if the data and the
+method are clear.
+
+**Decision.** Step 4 builds an evaluation set and a scoring harness before the OCR + LLM extractor
+exists. The set mixes synthetic invoices in three realistic layouts, phone-photo versions and the
+official KoSIT invoices rendered as PDFs. Scores are field-level precision, recall and F1 with
+lines matched by content, plus documents fully correct, share needing review and time per document.
+A rule-based baseline gives the bar to beat.
+
+**Consequences.** Every extractor variant in step 5 (OCR engine, model, prompt) can be compared on
+the same 82 documents. The truth contains only what the document shows, so 100 % is possible.
+
+## 20. Reproducible test data instead of committed files
+
+**Decision.** The evaluation set is generated, not stored in git: seeded generators, PDFs written
+without timestamps, seeded photo effects. `dataset.json` records a SHA-256 for every document and
+reports refer to it. A test checks that generation is byte-identical.
+
+**Consequences.** The repository stays small (the set is about 4 MB), anyone can rebuild exactly
+the same documents, and results can be traced to the exact files. Private test data (own
+receipts) lives in `data/private/`, outside git.

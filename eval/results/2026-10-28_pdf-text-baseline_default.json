@@ -1,0 +1,1048 @@
+{
+  "extractor": "pdf-text-baseline",
+  "dataset": {
+    "name": "default",
+    "seed": 2026,
+    "documents": 82
+  },
+  "created": "2026-10-28T17:47:37+00:00",
+  "version": "0.1.0",
+  "scores": {
+    "all_fields": {
+      "precision": 0.9570086705202312,
+      "recall": 0.6369319547968262,
+      "f1": 0.7648332611520139
+    },
+    "header_fields": {
+      "precision": 0.9135514018691588,
+      "recall": 0.6560402684563759,
+      "f1": 0.763671875
+    },
+    "line_fields": {
+      "precision": 0.964957264957265,
+      "recall": 0.6337356160538872,
+      "f1": 0.7650347281043537
+    }
+  },
+  "fields": {
+    "invoice_number": {
+      "tp": 50,
+      "fp": 0,
+      "fn": 8,
+      "precision": 1.0,
+      "recall": 0.8620689655172413,
+      "f1": 0.9259259259259259
+    },
+    "issue_date": {
+      "tp": 62,
+      "fp": 0,
+      "fn": 20,
+      "precision": 1.0,
+      "recall": 0.7560975609756098,
+      "f1": 0.8611111111111112
+    },
+    "delivery_date": {
+      "tp": 33,
+      "fp": 0,
+      "fn": 8,
+      "precision": 1.0,
+      "recall": 0.8048780487804879,
+      "f1": 0.8918918918918919
+    },
+    "supplier_name": {
+      "tp": 25,
+      "fp": 37,
+      "fn": 57,
+      "precision": 0.4032258064516129,
+      "recall": 0.3048780487804878,
+      "f1": 0.34722222222222227
+    },
+    "supplier_vat_id": {
+      "tp": 46,
+      "fp": 0,
+      "fn": 11,
+      "precision": 1.0,
+      "recall": 0.8070175438596491,
+      "f1": 0.8932038834951457
+    },
+    "supplier_tax_number": {
+      "tp": 13,
+      "fp": 0,
+      "fn": 17,
+      "precision": 1.0,
+      "recall": 0.43333333333333335,
+      "f1": 0.6046511627906976
+    },
+    "net_total": {
+      "tp": 50,
+      "fp": 0,
+      "fn": 32,
+      "precision": 1.0,
+      "recall": 0.6097560975609756,
+      "f1": 0.7575757575757575
+    },
+    "vat_total": {
+      "tp": 50,
+      "fp": 0,
+      "fn": 32,
+      "precision": 1.0,
+      "recall": 0.6097560975609756,
+      "f1": 0.7575757575757575
+    },
+    "gross_total": {
+      "tp": 62,
+      "fp": 0,
+      "fn": 20,
+      "precision": 1.0,
+      "recall": 0.7560975609756098,
+      "f1": 0.8611111111111112
+    },
+    "description": {
+      "tp": 369,
+      "fp": 7,
+      "fn": 158,
+      "precision": 0.9813829787234043,
+      "recall": 0.7001897533206831,
+      "f1": 0.8172757475083057
+    },
+    "seller_article_no": {
+      "tp": 266,
+      "fp": 0,
+      "fn": 93,
+      "precision": 1.0,
+      "recall": 0.7409470752089137,
+      "f1": 0.8512000000000001
+    },
+    "quantity": {
+      "tp": 376,
+      "fp": 0,
+      "fn": 151,
+      "precision": 1.0,
+      "recall": 0.713472485768501,
+      "f1": 0.832779623477298
+    },
+    "unit_code": {
+      "tp": 314,
+      "fp": 44,
+      "fn": 213,
+      "precision": 0.8770949720670391,
+      "recall": 0.5958254269449715,
+      "f1": 0.7096045197740112
+    },
+    "unit_price": {
+      "tp": 376,
+      "fp": 0,
+      "fn": 151,
+      "precision": 1.0,
+      "recall": 0.713472485768501,
+      "f1": 0.832779623477298
+    },
+    "allowance_amount": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 42,
+      "precision": null,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "line_amount": {
+      "tp": 345,
+      "fp": 31,
+      "fn": 182,
+      "precision": 0.9175531914893617,
+      "recall": 0.6546489563567363,
+      "f1": 0.7641196013289037
+    },
+    "vat_rate": {
+      "tp": 212,
+      "fp": 0,
+      "fn": 315,
+      "precision": 1.0,
+      "recall": 0.40227703984819735,
+      "f1": 0.5737483085250338
+    }
+  },
+  "documents": {
+    "with_result": 62,
+    "fully_correct": 0,
+    "needs_review": 42,
+    "errors": 0
+  },
+  "seconds_per_document": {
+    "median": 0.0044211229999859825,
+    "p95": 0.00968225999997685,
+    "mean": 0.004677262609754407
+  },
+  "groups": {
+    "kosit · pdf · wholesaler": {
+      "documents": 22,
+      "with_result": 22,
+      "fully_correct": 0,
+      "precision": 0.8606870229007634,
+      "recall": 0.7775862068965518,
+      "f1": 0.8170289855072463
+    },
+    "synthetic · pdf · cash_carry": {
+      "documents": 13,
+      "with_result": 13,
+      "fully_correct": 0,
+      "precision": 0.9778085991678225,
+      "recall": 0.8382877526753865,
+      "f1": 0.9026888604353394
+    },
+    "synthetic · pdf · receipt": {
+      "documents": 12,
+      "with_result": 12,
+      "fully_correct": 0,
+      "precision": 1.0,
+      "recall": 0.8059360730593608,
+      "f1": 0.8925410872313527
+    },
+    "synthetic · pdf · wholesaler": {
+      "documents": 15,
+      "with_result": 15,
+      "fully_correct": 0,
+      "precision": 0.9743589743589743,
+      "recall": 0.9620253164556962,
+      "f1": 0.9681528662420382
+    },
+    "synthetic · photo · receipt": {
+      "documents": 12,
+      "with_result": 0,
+      "fully_correct": 0,
+      "precision": null,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "synthetic · photo · wholesaler": {
+      "documents": 8,
+      "with_result": 0,
+      "fully_correct": 0,
+      "precision": null,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  "items": [
+    {
+      "id": "syn-001-wholesaler",
+      "sha256": "eab08cf7a829435e90240eefb8a7d907c03dc3f0a059ad924a01ddc6cea64f7f",
+      "predicted": true,
+      "f1": 0.9444444444444444,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0099,
+      "error": null
+    },
+    {
+      "id": "syn-002-wholesaler",
+      "sha256": "ec62ddabc41d05fa2877807a22c787b6f48c357832a80678d3b952ee3ac65d18",
+      "predicted": true,
+      "f1": 0.98989898989899,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0084,
+      "error": null
+    },
+    {
+      "id": "syn-003-wholesaler",
+      "sha256": "3ec05f4c2eadb2e26344401c7c9b87d52744cda01f79c66c344cb8465dc4eef3",
+      "predicted": true,
+      "f1": 0.9565217391304347,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0062,
+      "error": null
+    },
+    {
+      "id": "syn-004-wholesaler",
+      "sha256": "81d3e0d4d6542be9206aaa70ec01ee469ddada38220d27ec8468433f91d6b254",
+      "predicted": true,
+      "f1": 0.9905660377358491,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0091,
+      "error": null
+    },
+    {
+      "id": "syn-005-wholesaler",
+      "sha256": "692325993d2bd7641da16ec6d024e2652f08f71123c4811faa592af2885d4c55",
+      "predicted": true,
+      "f1": 0.9364161849710982,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0079,
+      "error": null
+    },
+    {
+      "id": "syn-006-wholesaler",
+      "sha256": "a9716b80b4e88982eaef99cd30403a30ade6b89b1a04c03fd871e64f9a0b4616",
+      "predicted": true,
+      "f1": 0.9626168224299064,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0119,
+      "error": null
+    },
+    {
+      "id": "syn-007-wholesaler",
+      "sha256": "5a06e5799b516dbbd3993f9572c305bdca0445adcce45fa9752cfdc783fd64cf",
+      "predicted": true,
+      "f1": 0.9626168224299064,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0088,
+      "error": null
+    },
+    {
+      "id": "syn-008-wholesaler",
+      "sha256": "6341360313532896c2d21feef0324295b2b736e1b87b2a8fa1212adac19f2559",
+      "predicted": true,
+      "f1": 0.9315068493150684,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0052,
+      "error": null
+    },
+    {
+      "id": "syn-009-wholesaler",
+      "sha256": "b6b30f58acc89957fc1c1abbcf1133ebf3eb4c856a8b37f0a46b32492799477f",
+      "predicted": true,
+      "f1": 0.98,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0058,
+      "error": null
+    },
+    {
+      "id": "syn-010-wholesaler",
+      "sha256": "20838d745a21ef260bee9c16dfe42b95497a3c8b88e5226b7787efa99d332ff0",
+      "predicted": true,
+      "f1": 0.9519650655021834,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0097,
+      "error": null
+    },
+    {
+      "id": "syn-011-wholesaler",
+      "sha256": "d6fc78cab92c32f532c0b7717c35709e084b63ea60ed08c931db36edc6494d1f",
+      "predicted": true,
+      "f1": 0.9905660377358491,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0087,
+      "error": null
+    },
+    {
+      "id": "syn-012-wholesaler",
+      "sha256": "28fe251f02a7fc31e69f2d06460d36a6e7b7a2a543cfa0bf603d85b42b409de4",
+      "predicted": true,
+      "f1": 0.9882352941176471,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0109,
+      "error": null
+    },
+    {
+      "id": "syn-013-wholesaler",
+      "sha256": "a1ece667981a991c6bc4f0f0cf2c27f6330f03ee6b89959df92aac961b59fda2",
+      "predicted": true,
+      "f1": 0.9722222222222222,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0062,
+      "error": null
+    },
+    {
+      "id": "syn-014-wholesaler",
+      "sha256": "1bb6ed90827b2d01a1e8d0b89a351ce65d5e83502616b98917125b8a3d89c9ee",
+      "predicted": true,
+      "f1": 0.9871794871794872,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0117,
+      "error": null
+    },
+    {
+      "id": "syn-015-wholesaler",
+      "sha256": "15d51ff3041ea91ad72b010e1061f0db7cfec946693e4dd363fb1430dfc72f6e",
+      "predicted": true,
+      "f1": 0.9315068493150684,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0051,
+      "error": null
+    },
+    {
+      "id": "syn-016-cash_carry",
+      "sha256": "3918f1f488ede0149cda5e310a78d8c5a93a9073ceddf094d231bc86a0a8c055",
+      "predicted": true,
+      "f1": 0.880597014925373,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0057,
+      "error": null
+    },
+    {
+      "id": "syn-017-cash_carry",
+      "sha256": "57cbc290d16b98f48b785c19948961445a82d806359e253253751451dcae96ec",
+      "predicted": true,
+      "f1": 0.8855721393034827,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0082,
+      "error": null
+    },
+    {
+      "id": "syn-018-cash_carry",
+      "sha256": "b09f4345af232e49a953e0f0f90ec1ecb51cdb3a954d4cd10a75926a0395b79c",
+      "predicted": true,
+      "f1": 0.896551724137931,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0078,
+      "error": null
+    },
+    {
+      "id": "syn-019-cash_carry",
+      "sha256": "60522045b12321f695df577ca4a4978a3ae2605088d45e6b0ba4699094771502",
+      "predicted": true,
+      "f1": 0.9361702127659575,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0058,
+      "error": null
+    },
+    {
+      "id": "syn-020-cash_carry",
+      "sha256": "c4955895fda2a8cdb789cf9d7354b9ef0a155a33ebf968ee257e4208c05656c8",
+      "predicted": true,
+      "f1": 0.9361702127659575,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0042,
+      "error": null
+    },
+    {
+      "id": "syn-021-cash_carry",
+      "sha256": "41005e9800b6b298d68937a0685f13b338e74a860f79cadeaa990dc9bce33364",
+      "predicted": true,
+      "f1": 0.9323308270676691,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0413,
+      "error": null
+    },
+    {
+      "id": "syn-022-cash_carry",
+      "sha256": "86c17ec0f95ca233e1a8571cfdd5909f075b84c237e886f4244620da05ac7c9f",
+      "predicted": true,
+      "f1": 0.9345794392523363,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0049,
+      "error": null
+    },
+    {
+      "id": "syn-023-cash_carry",
+      "sha256": "90d3fb7fb2701aa89613477e52201406df90c3bd31a8a4666c80894e9ca398d8",
+      "predicted": true,
+      "f1": 0.9345794392523363,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0043,
+      "error": null
+    },
+    {
+      "id": "syn-024-cash_carry",
+      "sha256": "0b206d3775502c3991e8f2d44a46bc612ce77cd4b1bc17b8868ed523581cb597",
+      "predicted": true,
+      "f1": 0.9104477611940298,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0054,
+      "error": null
+    },
+    {
+      "id": "syn-025-cash_carry",
+      "sha256": "fef8d16bdb3b8030ffd2cb4a038260b538b2a15545da136e12964c18c777b4a0",
+      "predicted": true,
+      "f1": 0.826086956521739,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0056,
+      "error": null
+    },
+    {
+      "id": "syn-026-cash_carry",
+      "sha256": "b1d4b520ebac390c99f620fd39152dda5de48fe474edb9851662c6e8da00d9a9",
+      "predicted": true,
+      "f1": 0.9052631578947369,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0041,
+      "error": null
+    },
+    {
+      "id": "syn-027-cash_carry",
+      "sha256": "688b1d50db6404537650e3f652ead14c9cd9ccb88b8aae1d12f0c8a6a4c97750",
+      "predicted": true,
+      "f1": 0.9024390243902439,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0038,
+      "error": null
+    },
+    {
+      "id": "syn-028-cash_carry",
+      "sha256": "526976e12d3e73b1bd76c93318e061e1fb0b6a8c7e82a7fdf877e672d3f30ee9",
+      "predicted": true,
+      "f1": 0.8985507246376812,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0035,
+      "error": null
+    },
+    {
+      "id": "syn-029-receipt",
+      "sha256": "15bd7114fb02bbce8c26e97480a3ef95e9b57ddd0023add749842c5979b4c904",
+      "predicted": true,
+      "f1": 0.888888888888889,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.003,
+      "error": null
+    },
+    {
+      "id": "syn-030-receipt",
+      "sha256": "33c8d8783760f33094ddfc7205f3f6b2a5a00297799d04392e468a09b7095794",
+      "predicted": true,
+      "f1": 0.8923076923076924,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0028,
+      "error": null
+    },
+    {
+      "id": "syn-031-receipt",
+      "sha256": "7ecc534b4f85182dc9bb50c0ed1520f02411e9fcbb319c2a2d7fb82acb736060",
+      "predicted": true,
+      "f1": 0.8979591836734693,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0036,
+      "error": null
+    },
+    {
+      "id": "syn-032-receipt",
+      "sha256": "3fb10df3be56e8586a7360840f137b72ba2e37b247e20feba80c9cf053ea38bd",
+      "predicted": true,
+      "f1": 0.896551724137931,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0034,
+      "error": null
+    },
+    {
+      "id": "syn-033-receipt",
+      "sha256": "f480f3e669a7aeae8da042cd4922c4dc7b312545e310bf351c93447d121c669c",
+      "predicted": true,
+      "f1": 0.8947368421052632,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0031,
+      "error": null
+    },
+    {
+      "id": "syn-034-receipt",
+      "sha256": "72327c8a346ef0614f84c994bab720f05458a0b19407a0043950aada8313b9de",
+      "predicted": true,
+      "f1": 0.8923076923076924,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0032,
+      "error": null
+    },
+    {
+      "id": "syn-035-receipt",
+      "sha256": "b205a801a07f49630852fe663f56eb0a851e2c0a5af0c6706518c3b0b6e458e8",
+      "predicted": true,
+      "f1": 0.8837209302325582,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0036,
+      "error": null
+    },
+    {
+      "id": "syn-036-receipt",
+      "sha256": "5916248e628837369d223795813265064eb9fcd51660a11cada23ce8e31bd3f2",
+      "predicted": true,
+      "f1": 0.8923076923076924,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0059,
+      "error": null
+    },
+    {
+      "id": "syn-037-receipt",
+      "sha256": "66f2b39f03723e9ba52de7b69517fd3d0bb3f8538ae86049a0cac3d94efcaeb9",
+      "predicted": true,
+      "f1": 0.8947368421052632,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0046,
+      "error": null
+    },
+    {
+      "id": "syn-038-receipt",
+      "sha256": "459bf6583612c4b05d3270d6070806300f644f911202e653906867268b3d5531",
+      "predicted": true,
+      "f1": 0.8923076923076924,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0069,
+      "error": null
+    },
+    {
+      "id": "syn-039-receipt",
+      "sha256": "72e8e595b53cba349c50be05c52a50a9a240814914ec80bcdd064f8af06ae503",
+      "predicted": true,
+      "f1": 0.8837209302325582,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0028,
+      "error": null
+    },
+    {
+      "id": "syn-040-receipt",
+      "sha256": "c70cfe35e4d2b1f74efd427bbe0dffc047b869960b41793eba61f8ce4b9ee638",
+      "predicted": true,
+      "f1": 0.888888888888889,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.003,
+      "error": null
+    },
+    {
+      "id": "syn-029-receipt-photo",
+      "sha256": "0a5314873df2490c569c7ee2a1d777ffad266d3030f9df62162f9d8ae1e0edc2",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-030-receipt-photo",
+      "sha256": "f93c266b0a73f5217a9bb9eacd6f434881d3cab506592654563f7121589c283a",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-031-receipt-photo",
+      "sha256": "00c98815c9e296b5943328544271c9f5fd7fd94648a3f18d959be644cfe0a227",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-032-receipt-photo",
+      "sha256": "45756933acfaf7cf9be84c2313ecf7af92b0712108f1324b50627ed239becf34",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-033-receipt-photo",
+      "sha256": "3a8bf48d17e3c94790c9bbf00151b345a110b25bcfc2d40a6d5fa65bc53e0a68",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-034-receipt-photo",
+      "sha256": "e503be0e524b3b4fcf38d3251dbc456a6775530b4f642d212017e88ba79336bf",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-035-receipt-photo",
+      "sha256": "eee5b04d4a41bbfb62f8eabe26db00e13216a80cf1b9b61f08f00a972af44e58",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-036-receipt-photo",
+      "sha256": "6b0bf01621db9177ad36b960b393c7bfa42f4b21a7c36b21ebb92fab98917063",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-037-receipt-photo",
+      "sha256": "7e8f6fdcc56015327029718b0862f1711d613081c3bb2cfbdb8d52c908018dc7",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-038-receipt-photo",
+      "sha256": "500db9a806dacac522b245d4c4b21f7bf681c1b79a6dbadc8e5dc99a0c71ed61",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-039-receipt-photo",
+      "sha256": "e3b149a58e256f6ee9ba3fd6ea4c6ebb3bb2e6ab8065282b51ea97987b3c5198",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-040-receipt-photo",
+      "sha256": "3a0df71c47398c115c6099165044457b52544db2839878f84203f6c1e298a1fc",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-001-wholesaler-photo",
+      "sha256": "01cf9deb546613b2220e69605428a7c6704e6041d511cdf3162c32d7d7784439",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-002-wholesaler-photo",
+      "sha256": "ddc72d146a9be905b374679f5430f69fcaa00a34486439c961274280d6e920a5",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-003-wholesaler-photo",
+      "sha256": "10a8e54a3a00ecba462ecb0db21dfe91cfa1afd2508d1ec6e4500bf109b5f98d",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-004-wholesaler-photo",
+      "sha256": "07fcdbb102f7a59b8eaf9b417e2f242601957e63beb462b3a5dfe72a2fb22cb8",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-005-wholesaler-photo",
+      "sha256": "6dbf0760ff75205654dd278519d5cac1f45ac020a0267a844e97546d634daa5a",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-006-wholesaler-photo",
+      "sha256": "8a7bc6bd5e62aacfe10b80ee9cbd9f5cd174c6997eec8b218ed9864dd3bbc5bb",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-007-wholesaler-photo",
+      "sha256": "79a0f7988b377c9fee2f63670dab62d1a73783192dfa2162eb4c0edabc5f6425",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "syn-008-wholesaler-photo",
+      "sha256": "b11617fe4778b2838955b9fe5be523fe9ee3bbefcaecca03f3a375236d9a1b05",
+      "predicted": false,
+      "f1": 0.0,
+      "fully_correct": false,
+      "needs_review": null,
+      "seconds": 0.0,
+      "error": null
+    },
+    {
+      "id": "kosit-01.01a",
+      "sha256": "de9730cea801741234099149884c8df7c05cc3f54bf4016b1a14ba83d136f944",
+      "predicted": true,
+      "f1": 0.7692307692307692,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0044,
+      "error": null
+    },
+    {
+      "id": "kosit-01.02a",
+      "sha256": "d8a1465bbcad5c9e99f5c6d493c0238c17c26793a9c881c1c88c69f59a3708a5",
+      "predicted": true,
+      "f1": 0.8666666666666667,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.004,
+      "error": null
+    },
+    {
+      "id": "kosit-01.03a",
+      "sha256": "a71df35b9b25d25cfede3dcf46e8bd0dc7bd8f8465d66d15a26f63c78b6dfd3e",
+      "predicted": true,
+      "f1": 0.8292682926829269,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0045,
+      "error": null
+    },
+    {
+      "id": "kosit-01.04a",
+      "sha256": "6d2452b49c5152df05d3fa74e70c7c01b8fd14a26505df7dafed23553bde3fde",
+      "predicted": true,
+      "f1": 0.8461538461538461,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0036,
+      "error": null
+    },
+    {
+      "id": "kosit-01.05a",
+      "sha256": "cd41b1dbbae44e4e3c4e318cd7ca4ee3245f3a92d82d5b450f6bb3ee149298c8",
+      "predicted": true,
+      "f1": 0.8666666666666666,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.005,
+      "error": null
+    },
+    {
+      "id": "kosit-01.06a",
+      "sha256": "e7b0e53c1cf345d4288c5dc74a6cd5e90bd6aa7c44e49abb42714fd033646092",
+      "predicted": true,
+      "f1": 0.9010989010989012,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.006,
+      "error": null
+    },
+    {
+      "id": "kosit-01.07a",
+      "sha256": "22abab90bcf80189dc0351e97dbde7f2f60402b5b0116d39033ed4fd7ebc9f55",
+      "predicted": true,
+      "f1": 0.8799999999999999,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0037,
+      "error": null
+    },
+    {
+      "id": "kosit-01.08a",
+      "sha256": "3d44a0bf60f495df21c66acbd92575adfacc57dacf144d267a407863098a964a",
+      "predicted": true,
+      "f1": 0.7857142857142857,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0041,
+      "error": null
+    },
+    {
+      "id": "kosit-01.09a",
+      "sha256": "ce841647f11021f28f0ed9ea190b91347a505f2548cb9e578453d52dffeb27ce",
+      "predicted": true,
+      "f1": 0.8571428571428571,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0045,
+      "error": null
+    },
+    {
+      "id": "kosit-01.10a",
+      "sha256": "9637c455107c0aa531f2c5c7ddd6f3431c7d08ef5f599a2fc3ff15b54e82845b",
+      "predicted": true,
+      "f1": 0.8275862068965518,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0039,
+      "error": null
+    },
+    {
+      "id": "kosit-01.11a",
+      "sha256": "5c4182ee4cb1b4f5f45e7ffe60d92438dbbec3c9056db8cdafabc753b7a3422f",
+      "predicted": true,
+      "f1": 0.7999999999999999,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0048,
+      "error": null
+    },
+    {
+      "id": "kosit-01.12a",
+      "sha256": "a13db523398cb1d4de625863d646d83343aa8906c9fcdf1e7d32c221767f9252",
+      "predicted": true,
+      "f1": 0.7407407407407408,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0054,
+      "error": null
+    },
+    {
+      "id": "kosit-01.13a",
+      "sha256": "2349f602692b72374c621f991a79dad1e1f5cd41a9eb699fe617f791f3aab01f",
+      "predicted": true,
+      "f1": 0.8299319727891157,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0088,
+      "error": null
+    },
+    {
+      "id": "kosit-01.14a",
+      "sha256": "b0a5dabf20cd7ee0b3cc445c5c87d8d3bdba6c4900820be356410b3d983b98aa",
+      "predicted": true,
+      "f1": 0.8205128205128205,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0053,
+      "error": null
+    },
+    {
+      "id": "kosit-01.17a",
+      "sha256": "de9730cea801741234099149884c8df7c05cc3f54bf4016b1a14ba83d136f944",
+      "predicted": true,
+      "f1": 0.7692307692307692,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0054,
+      "error": null
+    },
+    {
+      "id": "kosit-01.18a",
+      "sha256": "cd41b1dbbae44e4e3c4e318cd7ca4ee3245f3a92d82d5b450f6bb3ee149298c8",
+      "predicted": true,
+      "f1": 0.8666666666666666,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0049,
+      "error": null
+    },
+    {
+      "id": "kosit-01.19a",
+      "sha256": "cd41b1dbbae44e4e3c4e318cd7ca4ee3245f3a92d82d5b450f6bb3ee149298c8",
+      "predicted": true,
+      "f1": 0.8666666666666666,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0047,
+      "error": null
+    },
+    {
+      "id": "kosit-01.20a",
+      "sha256": "63bcf3bdf4756e85f03e2a4d2d501c8e8983732ae7fce616eae5ded3a88497a2",
+      "predicted": true,
+      "f1": 0.7647058823529412,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0046,
+      "error": null
+    },
+    {
+      "id": "kosit-01.21a",
+      "sha256": "1a0a85f5ff9f433fc6431a11e6cf14104ea1bc05b37573b480c2ef8dadf9471a",
+      "predicted": true,
+      "f1": 0.8275862068965517,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0041,
+      "error": null
+    },
+    {
+      "id": "kosit-03.03a",
+      "sha256": "e6057eeed70e6589a7a109573a39d9c8fa2d8fc0aab36d601aabd666ab03c1b2",
+      "predicted": true,
+      "f1": 0.8571428571428571,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 0.0049,
+      "error": null
+    },
+    {
+      "id": "kosit-03.05a",
+      "sha256": "d57ba2f94b6a0f5ed1748823ec7b4681281125bcb43f681955dbb72ae89571c9",
+      "predicted": true,
+      "f1": 0.5555555555555556,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0059,
+      "error": null
+    },
+    {
+      "id": "kosit-03.06a",
+      "sha256": "8716da99e3429bf27ab9a81a020b96734233c3d52500891448dfefa2d56513f0",
+      "predicted": true,
+      "f1": 0.7368421052631579,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 0.0051,
+      "error": null
+    }
+  ]
+}

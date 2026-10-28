@@ -7,7 +7,7 @@
 
 **A food-cost copilot for restaurants.** It reads supplier invoices (XRechnung and ZUGFeRD e-invoices, PDFs and phone photos of paper receipts), turns them into ingredient prices and shows what each dish really costs, and which dishes lose margin when prices go up.
 
-> 🚧 **Work in progress.** Steps 1–3 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules, and approved automatically or sent to review. See the [roadmap](#roadmap).
+> 🚧 **Work in progress.** Steps 1–4 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review, and an evaluation set with a scoring harness is ready for the PDF and photo extractor. See the [roadmap](#roadmap).
 
 ## Why
 
@@ -39,7 +39,7 @@ flowchart TB
 - [x] **Step 1 – Foundation:** canonical invoice schema (pydantic, EN 16931 field names), PostgreSQL schema with Alembic migrations, duplicate detection, tests against a real PostgreSQL, CI
 - [x] **Step 2 – E-invoices:** XRechnung (UBL and CII) and ZUGFeRD/Factur-X PDFs read exactly, tested on the official KoSIT test invoices; command `wareneinsatz ingest`
 - [x] **Step 3 – Validation:** totals, VAT, units, dates and supplier tax IDs checked; clean e-invoices approved automatically, the rest goes to review (`wareneinsatz review`)
-- [ ] **Step 4 – Evaluation set:** labelled documents and a script for field-level precision, recall and F1
+- [x] **Step 4 – Evaluation set:** 82 labelled documents (synthetic invoices and receipts, phone-photo versions, official KoSIT invoices), field-level precision/recall/F1, rule-based baseline
 - [ ] **Step 5 – PDFs and photos:** OCR + LLM extraction into the same schema, measured on the evaluation set
 - [ ] **Step 6 – Ingredient matching** and price history per ingredient and supplier
 - [ ] **Step 7 – Recipe costing and alerts:** food-cost %, gross margin, price jumps, monthly Wareneinsatz
@@ -101,6 +101,21 @@ uv run wareneinsatz review
 
 **Tested on official data:** all 44 KoSIT test invoices pass without a single error, so there are no false alarms on valid XRechnungen. In a wider set of 144 official ZUGFeRD and XRechnung samples, 4 were flagged. Two have genuine arithmetic mistakes in a line (20 × 2.77 printed as 55.46; 10,000 kWh × 0.052 printed as 52.00), and two are insurance invoices whose lines include insurance tax. Line discounts and surcharges found in the samples were added to the schema (migration `0003`), because a discount changes the real price of an ingredient.
 
+## Measuring accuracy (step 4)
+
+Before building the PDF and photo extractor, there is a way to measure it: 82 documents with known correct answers and a harness that scores every field. Details: [eval/README.md](eval/README.md).
+
+```bash
+uv run wareneinsatz eval generate                          # build the evaluation set (seeded, reproducible)
+uv run wareneinsatz eval run --extractor pdf-text-baseline # score an extractor, report in eval/results/
+```
+
+| Extractor | All fields F1 | Precision | Recall | Completely correct |
+|---|---:|---:|---:|---:|
+| Rule-based baseline (PDF text layer, no OCR, no AI) | 76.5 % | 95.7 % | 63.7 % | 0 of 82 |
+
+The baseline reads clean text PDFs well but gets nothing from the 20 photos and no document fully right: that is the bar for the OCR + LLM extractor in step 5.
+
 ## Design decisions so far
 
 Details and reasons in [docs/decisions.md](docs/decisions.md).
@@ -137,7 +152,8 @@ Database tests run against a separate database (`wareneinsatz_test`) and are ski
 │   ├── ingest/           # file type detection, UBL + CII parsers, ZUGFeRD, file store, pipeline
 │   ├── validation.py     # business-rule checks (step 3)
 │   ├── units.py          # UN/ECE unit codes, printed units, conversion to g / ml / piece
-│   ├── cli.py            # `wareneinsatz ingest <files or folders>`, `wareneinsatz review`
+│   ├── evaluation/       # evaluation set generator, scoring, extractors, harness (step 4)
+│   ├── cli.py            # `wareneinsatz ingest`, `review`, `eval generate`, `eval run`
 │   ├── schemas.py        # canonical invoice schema (pydantic)
 │   ├── models.py         # database tables (SQLAlchemy 2)
 │   ├── repository.py     # storing invoices, duplicate detection
@@ -146,6 +162,7 @@ Database tests run against a separate database (`wareneinsatz_test`) and are ski
 ├── migrations/           # Alembic migrations (0001 invoice tables, 0002/0003 findings from official samples)
 ├── tests/                # pytest; samples/ has synthetic and official KoSIT test invoices
 ├── docs/                 # data model and design decisions
+├── eval/                 # evaluation results (the generated dataset itself is not in git)
 ├── db/init/              # creates the test database in the local container
 ├── docker-compose.yml    # local PostgreSQL 16
 └── .github/workflows/    # CI: lint, format check, tests against PostgreSQL 16
@@ -157,7 +174,7 @@ No real supplier or customer data is stored in this repository. Tests use synthe
 
 ## Tech stack
 
-Python 3.12 · pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · defusedxml · pypdf · python-stdnum · Docker Compose · pytest · ruff · uv · GitHub Actions
+Python 3.12 · pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · defusedxml · pypdf · python-stdnum · ReportLab · Pillow · pypdfium2 · Docker Compose · pytest · ruff · uv · GitHub Actions
 
 ## Author
 
