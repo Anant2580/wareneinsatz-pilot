@@ -86,9 +86,37 @@ step 3 validation would send to review, and the time per document.
 |---|---:|---:|---:|---:|---:|---|
 | pdf-text-baseline (rules, no OCR, no AI) | 78.1 % | 97.3 % | 65.2 % | 62 of 82 | 0 of 82 | [2026-10-28](results/2026-10-28_pdf-text-baseline_default.md) |
 
+| llm-hybrid, Qwen3-VL 8B (image + OCR/PDF text) | **98.9 %** | 98.6 % | 99.2 % | 82 of 82 | **67 of 82** | [2026-10-29](results/2026-10-29_llm-hybrid_qwen3-vl-8b-instruct_default.md) |
+
 The baseline was first scored at 76.5 %; after the unit comparison above was corrected (decision 25
-in `docs/decisions.md`) it is 78.1 %. The language model runs are measured on a laptop (Apple M4,
-16 GB) and added here.
+in `docs/decisions.md`) it is 78.1 %.
+
+Language model runs: MacBook Air, Apple M4, 16 GB, Ollama, models quantised to 4 bits. The 8B
+hybrid run took a median of 70 s per document (492 output tokens at 12.4 tokens/s); all 82
+replies were complete, valid invoices, and the step 3 validation would send 13 to review.
+
+### Photos: which mode and which model?
+
+The 20 phone photos (12 till receipts, 8 A4 invoices) are the hard case, so the modes and the
+smaller model were compared there. F1 per photo group, and documents completely correct:
+
+| Run on the 20 photos | Receipt photos F1 | A4 photos F1 | Completely correct | Median time | Report |
+|---|---:|---:|---:|---:|---|
+| text: OCR text only, 8B | 90.6 % | 74.2 % | 2 of 20 | 57 s | [md](results/2026-10-29_llm-text_qwen3-vl-8b-instruct_default_photo.md) |
+| vision: image only, 8B | 97.9 % | 99.0 % | 9 of 20 | 75 s | [md](results/2026-10-29_llm-vision_qwen3-vl-8b-instruct_default_photo.md) |
+| hybrid: image + OCR text, 8B | **99.0 %** | 98.2 % | **14 of 20** | 65 s | [md](results/2026-10-29_llm-hybrid_qwen3-vl-8b-instruct_default.md) (photo groups) |
+| hybrid, 4B model | 97.6 % | 93.6 % | 7 of 20 | 51 s | [md](results/2026-10-29_llm-hybrid_qwen3-vl-4b-instruct_default_photo.md) |
+
+What this shows:
+
+- **The image is what makes photos work.** OCR text alone loses the table layout of a tilted A4
+  photo, so the model can't tell which number belongs to which column (74 % on A4 photos).
+- **Image + OCR text is best overall:** the most documents completely correct (14 of 20). The OCR
+  text helps with exact digits; where it is wrong, the image wins. Hybrid is the default mode.
+- **8B beats 4B** clearly on A4 photos (98 % vs 94 %) for about 30 % more time per document.
+- The rule baseline gets 0 % on photos: it needs a text layer.
+- Limits: synthetic photos with simulated tilt, blur and noise, and one seed. Real receipts
+  (crumpled thermal paper) are harder; they go into `data/private/eval/` next.
 
 What the baseline shows:
 

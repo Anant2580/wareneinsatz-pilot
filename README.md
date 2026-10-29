@@ -7,7 +7,7 @@
 
 **A food-cost copilot for restaurants.** It reads supplier invoices (XRechnung and ZUGFeRD e-invoices, PDFs and phone photos of paper receipts), turns them into ingredient prices and shows what each dish really costs, and which dishes lose margin when prices go up.
 
-> 🚧 **Work in progress.** Steps 1–4 of 9 are done and step 5 is built: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model, measured on an evaluation set of 82 documents. See the [roadmap](#roadmap).
+> 🚧 **Work in progress.** Steps 1–5 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model, measured on an evaluation set of 82 documents. See the [roadmap](#roadmap).
 
 ## Why
 
@@ -40,7 +40,7 @@ flowchart TB
 - [x] **Step 2 – E-invoices:** XRechnung (UBL and CII) and ZUGFeRD/Factur-X PDFs read exactly, tested on the official KoSIT test invoices; command `wareneinsatz ingest`
 - [x] **Step 3 – Validation:** totals, VAT, units, dates and supplier tax IDs checked; clean e-invoices approved automatically, the rest goes to review (`wareneinsatz review`)
 - [x] **Step 4 – Evaluation set:** 82 labelled documents (synthetic invoices and receipts, phone-photo versions, official KoSIT invoices), field-level precision/recall/F1, rule-based baseline
-- [ ] **Step 5 – PDFs and photos:** OCR + a local vision language model into the same schema (built; measurement on the evaluation set running)
+- [x] **Step 5 – PDFs and photos:** OCR + a local vision language model (Qwen3-VL 8B) into the same schema: F1 98.9 % on the 82-document evaluation set, 67 documents completely correct
 - [ ] **Step 6 – Ingredient matching** and price history per ingredient and supplier
 - [ ] **Step 7 – Recipe costing and alerts:** food-cost %, gross margin, price jumps, monthly Wareneinsatz
 - [ ] **Step 8 – API and UI:** FastAPI backend; Streamlit upload, review screen and dashboard
@@ -113,8 +113,9 @@ uv run wareneinsatz eval run --extractor pdf-text-baseline # score an extractor,
 | Extractor | All fields F1 | Precision | Recall | Completely correct |
 |---|---:|---:|---:|---:|
 | Rule-based baseline (PDF text layer, no OCR, no AI) | 78.1 % | 97.3 % | 65.2 % | 0 of 82 |
+| OCR + Qwen3-VL 8B, hybrid mode (step 5) | **98.9 %** | 98.6 % | 99.2 % | **67 of 82** |
 
-The baseline reads clean text PDFs well but gets nothing from the 20 photos and no document fully right: that is the bar for the OCR + LLM extractor in step 5.
+The baseline reads clean text PDFs well but gets nothing from the 20 photos and no document fully right. The step 5 reader also reads the photos (receipt photos 99.0 %, A4 photos 98.2 % F1).
 
 ## Reading PDFs and photos (step 5)
 
@@ -144,8 +145,11 @@ flowchart LR
   product row, gross or net decided by which printed total the lines add up to.
 - **Lossless by test:** a perfect transcription of any of 202 test invoices gives back every
   scored field, so every error in a measurement is a reading error of the model.
-- **Three modes** are compared on the evaluation set: text only (PDF text layer or OCR), images
-  only, and both. Model, mode, OCR engine and prompt version are stored with every result.
+- **Measured:** all-fields F1 **98.9 %** on the 82 documents (rule baseline 78.1 %), 67 completely
+  correct, every reply a valid invoice; median 70 s per document on a MacBook Air M4 (16 GB).
+- **Three modes compared** on the 20 photos: OCR text only 74–91 % F1, image only 98–99 %, image +
+  OCR text 98–99 % with the most documents fully correct (14 of 20), so hybrid is the default. The
+  4B model is 30 % faster but weaker on A4 photos (94 %). Details: [eval/README.md](eval/README.md).
 - **Always reviewed.** Nothing read by a model is approved automatically. The model's untouched
   reply is kept, so its accuracy on real invoices can be measured against what the reviewer approved.
 - **Robust batch:** one transaction per document; if the model server is down the batch stops and

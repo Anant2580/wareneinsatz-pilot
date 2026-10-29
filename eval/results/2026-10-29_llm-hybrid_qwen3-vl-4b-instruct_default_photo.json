@@ -1,0 +1,815 @@
+{
+  "extractor": "llm-hybrid",
+  "settings": {
+    "method": "llm-hybrid",
+    "model": "ollama:qwen3-vl:4b-instruct",
+    "ocr": "tesseract-5.5.4",
+    "image_side": 1600,
+    "prompt_version": "2026-10-29.1"
+  },
+  "dataset": {
+    "name": "default",
+    "seed": 2026,
+    "documents": 20
+  },
+  "subset": {
+    "only": "photo"
+  },
+  "created": "2026-10-29T11:13:28+00:00",
+  "version": "0.1.0",
+  "scores": {
+    "all_fields": {
+      "precision": 0.9515695067264573,
+      "recall": 0.9515695067264573,
+      "f1": 0.9515695067264573
+    },
+    "header_fields": {
+      "precision": 0.9402985074626866,
+      "recall": 0.9264705882352942,
+      "f1": 0.9333333333333335
+    },
+    "line_fields": {
+      "precision": 0.9531090723751274,
+      "recall": 0.9550561797752809,
+      "f1": 0.9540816326530611
+    }
+  },
+  "fields": {
+    "invoice_number": {
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "issue_date": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "delivery_date": {
+      "tp": 7,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.875,
+      "recall": 0.875,
+      "f1": 0.875
+    },
+    "supplier_name": {
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "supplier_vat_id": {
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "supplier_tax_number": {
+      "tp": 10,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1.0,
+      "recall": 0.8333333333333334,
+      "f1": 0.9090909090909091
+    },
+    "net_total": {
+      "tp": 18,
+      "fp": 2,
+      "fn": 2,
+      "precision": 0.9,
+      "recall": 0.9,
+      "f1": 0.9
+    },
+    "vat_total": {
+      "tp": 16,
+      "fp": 4,
+      "fn": 4,
+      "precision": 0.8,
+      "recall": 0.8,
+      "f1": 0.8000000000000002
+    },
+    "gross_total": {
+      "tp": 19,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.95,
+      "recall": 0.95,
+      "f1": 0.9500000000000001
+    },
+    "description": {
+      "tp": 139,
+      "fp": 12,
+      "fn": 8,
+      "precision": 0.9205298013245033,
+      "recall": 0.9455782312925171,
+      "f1": 0.9328859060402686
+    },
+    "seller_article_no": {
+      "tp": 81,
+      "fp": 5,
+      "fn": 5,
+      "precision": 0.9418604651162791,
+      "recall": 0.9418604651162791,
+      "f1": 0.9418604651162791
+    },
+    "quantity": {
+      "tp": 146,
+      "fp": 5,
+      "fn": 1,
+      "precision": 0.9668874172185431,
+      "recall": 0.9931972789115646,
+      "f1": 0.9798657718120806
+    },
+    "unit_code": {
+      "tp": 140,
+      "fp": 2,
+      "fn": 7,
+      "precision": 0.9859154929577465,
+      "recall": 0.9523809523809523,
+      "f1": 0.9688581314878894
+    },
+    "unit_price": {
+      "tp": 146,
+      "fp": 5,
+      "fn": 1,
+      "precision": 0.9668874172185431,
+      "recall": 0.9931972789115646,
+      "f1": 0.9798657718120806
+    },
+    "allowance_amount": {
+      "tp": 3,
+      "fp": 0,
+      "fn": 8,
+      "precision": 1.0,
+      "recall": 0.2727272727272727,
+      "f1": 0.42857142857142855
+    },
+    "line_amount": {
+      "tp": 138,
+      "fp": 13,
+      "fn": 9,
+      "precision": 0.9139072847682119,
+      "recall": 0.9387755102040817,
+      "f1": 0.9261744966442954
+    },
+    "vat_rate": {
+      "tp": 142,
+      "fp": 4,
+      "fn": 5,
+      "precision": 0.9726027397260274,
+      "recall": 0.9659863945578231,
+      "f1": 0.9692832764505118
+    }
+  },
+  "documents": {
+    "with_result": 20,
+    "fully_correct": 7,
+    "needs_review": 9,
+    "errors": 0
+  },
+  "seconds_per_document": {
+    "median": 50.621816021000086,
+    "p95": 91.1219249159999,
+    "mean": 57.156330777099996
+  },
+  "language_model": {
+    "replies": 20,
+    "valid_invoices": 20,
+    "median_prompt_tokens": 2613.0,
+    "median_output_tokens": 508.0,
+    "median_tokens_per_second": 17.55,
+    "median_llm_seconds": 49.153,
+    "median_ocr_seconds": 1.24
+  },
+  "groups": {
+    "synthetic · photo · receipt": {
+      "documents": 12,
+      "with_result": 12,
+      "fully_correct": 7,
+      "precision": 0.9837587006960556,
+      "recall": 0.9680365296803652,
+      "f1": 0.9758342922899885
+    },
+    "synthetic · photo · wholesaler": {
+      "documents": 8,
+      "with_result": 8,
+      "fully_correct": 0,
+      "precision": 0.9312865497076024,
+      "recall": 0.9409158050221565,
+      "f1": 0.9360764144011756
+    }
+  },
+  "items": [
+    {
+      "id": "syn-029-receipt-photo",
+      "sha256": "1a6e2184be2e744ef54f19dec235eafd25077b9571b28d17ef592b89889d614b",
+      "predicted": true,
+      "f1": 0.9666666666666667,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 43.8156,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.911,
+        "seconds": 43.815,
+        "ocr_seconds": 0.624,
+        "llm_seconds": 43.178,
+        "prompt_tokens": 2287,
+        "output_tokens": 408,
+        "tokens_per_second": 18.0,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-030-receipt-photo",
+      "sha256": "c84a2e8598b23c3232285d19b0c3a95b3a83e1c42d41c53c9c935ca80a4ee76f",
+      "predicted": true,
+      "f1": 1.0,
+      "fully_correct": true,
+      "needs_review": false,
+      "seconds": 43.1433,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.924,
+        "seconds": 43.142,
+        "ocr_seconds": 1.252,
+        "llm_seconds": 41.873,
+        "prompt_tokens": 2559,
+        "output_tokens": 445,
+        "tokens_per_second": 18.5,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-031-receipt-photo",
+      "sha256": "595dde4b05f7c75b298d7d8d85d2f7dbbcecd948f29a6530f49991539406e2d5",
+      "predicted": true,
+      "f1": 0.9629629629629629,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 50.8526,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.938,
+        "seconds": 50.852,
+        "ocr_seconds": 1.024,
+        "llm_seconds": 49.813,
+        "prompt_tokens": 2449,
+        "output_tokens": 663,
+        "tokens_per_second": 18.8,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-032-receipt-photo",
+      "sha256": "7d47a42f71f338cdce037e65420ca026c4b66427bb070a676ecbe53324d9e7f9",
+      "predicted": true,
+      "f1": 1.0,
+      "fully_correct": true,
+      "needs_review": false,
+      "seconds": 43.2223,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.918,
+        "seconds": 43.222,
+        "ocr_seconds": 1.02,
+        "llm_seconds": 42.19,
+        "prompt_tokens": 2197,
+        "output_tokens": 583,
+        "tokens_per_second": 19.2,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-033-receipt-photo",
+      "sha256": "f1f7760f18734c3b32682f23cf36601d012fdf23b0353f0821b67532b61c2e6d",
+      "predicted": true,
+      "f1": 1.0,
+      "fully_correct": true,
+      "needs_review": false,
+      "seconds": 38.5841,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.946,
+        "seconds": 38.584,
+        "ocr_seconds": 0.787,
+        "llm_seconds": 37.783,
+        "prompt_tokens": 2190,
+        "output_tokens": 502,
+        "tokens_per_second": 19.5,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-034-receipt-photo",
+      "sha256": "414e852f5f1ab3322c4ad939f339040ad62e883c1722b2c9e3cc8f24d30829b5",
+      "predicted": true,
+      "f1": 1.0,
+      "fully_correct": true,
+      "needs_review": false,
+      "seconds": 44.861,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.94,
+        "seconds": 44.86,
+        "ocr_seconds": 0.863,
+        "llm_seconds": 43.979,
+        "prompt_tokens": 2582,
+        "output_tokens": 466,
+        "tokens_per_second": 17.3,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-035-receipt-photo",
+      "sha256": "d7c357f2074ee60ef507ae877b252c90b04a87768287330d73e939d3bc069254",
+      "predicted": true,
+      "f1": 1.0,
+      "fully_correct": true,
+      "needs_review": false,
+      "seconds": 38.4187,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.946,
+        "seconds": 38.418,
+        "ocr_seconds": 1.288,
+        "llm_seconds": 37.107,
+        "prompt_tokens": 2288,
+        "output_tokens": 342,
+        "tokens_per_second": 17.3,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-036-receipt-photo",
+      "sha256": "89b38f3b8a6f5686d8fc92a12aeca044ce7a74215deb9c7527c94d3a98026e3c",
+      "predicted": true,
+      "f1": 0.835820895522388,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 50.5325,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.946,
+        "seconds": 50.531,
+        "ocr_seconds": 1.567,
+        "llm_seconds": 48.911,
+        "prompt_tokens": 2556,
+        "output_tokens": 489,
+        "tokens_per_second": 17.5,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-037-receipt-photo",
+      "sha256": "b27097f0e53f0c1e686fe0a98f408d6e32901813ca33e21761ac9e64eeb63ca8",
+      "predicted": true,
+      "f1": 0.9879518072289156,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 51.7099,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.924,
+        "seconds": 51.708,
+        "ocr_seconds": 1.725,
+        "llm_seconds": 49.962,
+        "prompt_tokens": 2514,
+        "output_tokens": 514,
+        "tokens_per_second": 17.0,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-038-receipt-photo",
+      "sha256": "18914c247dd99a43f921eb7a02283ed43fb9773af6b1f936943715a40dbb2a87",
+      "predicted": true,
+      "f1": 1.0,
+      "fully_correct": true,
+      "needs_review": false,
+      "seconds": 39.6533,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.949,
+        "seconds": 39.653,
+        "ocr_seconds": 1.462,
+        "llm_seconds": 38.169,
+        "prompt_tokens": 2227,
+        "output_tokens": 467,
+        "tokens_per_second": 19.1,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-039-receipt-photo",
+      "sha256": "e3ad7085623fc8540e07a94504fb17a4bd76c9781f4cbf65d5dfe686abafab18",
+      "predicted": true,
+      "f1": 1.0,
+      "fully_correct": true,
+      "needs_review": false,
+      "seconds": 37.5887,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.944,
+        "seconds": 37.588,
+        "ocr_seconds": 0.883,
+        "llm_seconds": 36.66,
+        "prompt_tokens": 2698,
+        "output_tokens": 327,
+        "tokens_per_second": 18.4,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-040-receipt-photo",
+      "sha256": "f2238bdb74769ad4e0406ff3936aafa9091de481ccdba1fc4145ed0fd817babf",
+      "predicted": true,
+      "f1": 0.9491525423728815,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 40.4571,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.853,
+        "seconds": 40.455,
+        "ocr_seconds": 0.95,
+        "llm_seconds": 39.467,
+        "prompt_tokens": 2644,
+        "output_tokens": 410,
+        "tokens_per_second": 18.7,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-001-wholesaler-photo",
+      "sha256": "e290f16ff60ef571a6b8d8de6340b09700f69766b3ada07c63848323fb8ab731",
+      "predicted": true,
+      "f1": 0.9863013698630136,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 66.8953,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.809,
+        "seconds": 66.894,
+        "ocr_seconds": 1.106,
+        "llm_seconds": 65.757,
+        "prompt_tokens": 3351,
+        "output_tokens": 738,
+        "tokens_per_second": 17.6,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-002-wholesaler-photo",
+      "sha256": "220103b62af71266c30a05026ed6f35070848ff88ca126b84d1a74a1391a8f45",
+      "predicted": true,
+      "f1": 0.9489795918367346,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 84.3321,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.88,
+        "seconds": 84.33,
+        "ocr_seconds": 1.227,
+        "llm_seconds": 83.062,
+        "prompt_tokens": 3517,
+        "output_tokens": 997,
+        "tokens_per_second": 17.2,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-003-wholesaler-photo",
+      "sha256": "6ccad8ebea3954e7c1b04608af849d5e5c7258de7854ee3fb70c1d66ab6d7e77",
+      "predicted": true,
+      "f1": 0.9333333333333333,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 58.4779,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.685,
+        "seconds": 58.476,
+        "ocr_seconds": 1.2,
+        "llm_seconds": 57.258,
+        "prompt_tokens": 2846,
+        "output_tokens": 704,
+        "tokens_per_second": 17.9,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-004-wholesaler-photo",
+      "sha256": "00056b63e1ea8634491c3ea7952668e1d65b2f25b9d72d71b918c7022e0758cc",
+      "predicted": true,
+      "f1": 0.9339622641509434,
+      "fully_correct": false,
+      "needs_review": false,
+      "seconds": 96.0204,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.804,
+        "seconds": 96.019,
+        "ocr_seconds": 1.755,
+        "llm_seconds": 94.241,
+        "prompt_tokens": 3605,
+        "output_tokens": 1126,
+        "tokens_per_second": 16.7,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-005-wholesaler-photo",
+      "sha256": "9348bae716a6bd0bd9eded02a8964ce0171b152df0a0c6193c371c6d1001eaad",
+      "predicted": true,
+      "f1": 0.8602150537634408,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 91.1219,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.828,
+        "seconds": 91.121,
+        "ocr_seconds": 1.834,
+        "llm_seconds": 89.238,
+        "prompt_tokens": 3503,
+        "output_tokens": 1028,
+        "tokens_per_second": 16.5,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-006-wholesaler-photo",
+      "sha256": "2ad75cd7df241cb0e16ec94efbfdff6ccef26d7148c29bb7501653026de035df",
+      "predicted": true,
+      "f1": 0.9626168224299064,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 86.7309,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.709,
+        "seconds": 86.73,
+        "ocr_seconds": 1.539,
+        "llm_seconds": 85.174,
+        "prompt_tokens": 3149,
+        "output_tokens": 1115,
+        "tokens_per_second": 17.2,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-007-wholesaler-photo",
+      "sha256": "adbf08d190b9bb6bf0b0f4cdbb24cca32a3ccdc420eff8861fbe3150841f2254",
+      "predicted": true,
+      "f1": 0.9201877934272301,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 85.9979,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.694,
+        "seconds": 85.996,
+        "ocr_seconds": 1.623,
+        "llm_seconds": 84.356,
+        "prompt_tokens": 3134,
+        "output_tokens": 1088,
+        "tokens_per_second": 16.9,
+        "valid": true,
+        "problems": []
+      }
+    },
+    {
+      "id": "syn-008-wholesaler-photo",
+      "sha256": "b8c12c4b968925e82121005e56fbf17ce57891f9e4fbcd47fb16608517bd3cf6",
+      "predicted": true,
+      "f1": 0.972972972972973,
+      "fully_correct": false,
+      "needs_review": true,
+      "seconds": 50.7111,
+      "error": null,
+      "details": {
+        "method": "llm-hybrid",
+        "model": "ollama:qwen3-vl:4b-instruct",
+        "ocr": "tesseract-5.5.4",
+        "image_side": 1600,
+        "prompt_version": "2026-10-29.1",
+        "pages": 1,
+        "text_sources": [
+          "ocr"
+        ],
+        "ocr_confidence": 0.799,
+        "seconds": 50.708,
+        "ocr_seconds": 1.29,
+        "llm_seconds": 49.394,
+        "prompt_tokens": 3136,
+        "output_tokens": 434,
+        "tokens_per_second": 17.2,
+        "valid": true,
+        "problems": []
+      }
+    }
+  ]
+}
