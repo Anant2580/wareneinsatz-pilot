@@ -62,24 +62,30 @@ erDiagram
         numeric unit_price
         numeric line_amount
         numeric vat_rate
+        bigint ingredient_id FK "step 6"
         bigint supplier_product_id FK "step 6"
-        text match_method "step 6"
+        text match_status "suggested, confirmed, no_match"
+        text match_method "memory, fuzzy, embedding, hybrid, manual"
+        float match_score
+        numeric base_quantity "quantity in g, ml or pieces"
     }
     ingredients {
         bigint id PK
-        text name UK
+        text key UK "e.g. patty-rind-180"
+        text name
         text category
         text base_unit "g, ml or piece"
         bool is_food "false for deposits, packaging"
+        jsonb aliases
     }
     supplier_products {
         bigint id PK
         bigint supplier_id FK
-        text seller_article_no
-        text description_key
+        text article_no "unique per supplier"
+        text description_key "unique per supplier without article no."
         bigint ingredient_id FK
-        numeric base_qty_per_unit "e.g. 2500 g per carton"
-        bool confirmed "checked by a person"
+        numeric base_qty_per_unit "e.g. 10000 g per carton"
+        text confirmed_by "the person who confirmed it"
     }
     recipes {
         bigint id PK
@@ -114,17 +120,22 @@ erDiagram
 Migration `0002` (step 2) widened `unit_price` to NUMERIC(20,10) and allowed negative allowance and charge totals, after the official test invoices showed both.
 Migration `0003` (step 3) added line discounts and surcharges (`allowance_amount`, `charge_amount`) and `approved_by` ('auto' or the reviewer); `review_issues` holds the validation findings.
 
-## Step 6: matching and prices (planned, migration `0002`)
+## Step 6: matching and prices (migration `0004`, exists)
 
-- `ingredients`: the kitchen's master list with one base unit each (g, ml or piece).
-  Deposits (Pfand) and packaging are `is_food = false`, so they never count as food cost.
-- `supplier_products`: what a supplier sells, mapped to an ingredient, with the pack size
-  (e.g. "Pommes Frites TK, 4 x 2,5 kg" = 10,000 g per carton). Once a person confirms a mapping,
-  the next invoice with the same article number matches automatically.
-- `invoice_lines` gets `supplier_product_id`, `match_method` (article_no, rule, fuzzy, embedding,
-  manual) and `match_score`, so matching accuracy can be measured per method.
-- View `v_ingredient_prices`: net price per base unit (EUR per kg, l or piece) for every matched
-  line of an approved invoice, by date and supplier. It is a view, so it can never go stale.
+- `ingredients`: the kitchen's master list (`data/ingredients.json`) with one base unit each
+  (g, ml or piece). Deposits (Pfand) and packaging are `is_food = false`, so they never count as
+  food cost.
+- `supplier_products`: the matching memory. A supplier's product confirmed by a person as an
+  ingredient, with the pack size (e.g. "Pommes Frites TK, 4 x 2,5 kg" = 10,000 g per carton).
+  The next invoice with the same article number (or, without one, the same text) matches
+  automatically. Two partial unique indexes keep one entry per article number or text.
+- `invoice_lines` got `ingredient_id`, `supplier_product_id`, `match_status`, `match_method`,
+  `match_score` and `base_quantity`. A confirmed suggestion keeps the method and score that
+  suggested it, so matching accuracy can be measured per method on real invoices too. A CHECK
+  makes sure a confirmed line always has an ingredient.
+- View `v_ingredient_prices`: net price per base unit and per kg / l / piece for every confirmed
+  line of an approved invoice, by date and supplier. Credit notes and returns are left out. It is a
+  view, so it can never go stale.
 
 ## Step 7: recipes and alerts (planned, migrations `0003`, `0004`)
 
@@ -134,13 +145,13 @@ Migration `0003` (step 3) added line discounts and surcharges (`allowance_amount
   with quantity and waste percentage.
 - `alerts`: price jumps, dishes above their food-cost target, cheaper supplier available.
 
-## Calculations (planned)
+## Calculations
 
 | Value | Formula |
 |---|---|
 | Net line amount | `line_amount`, or `line_amount / (1 + vat_rate / 100)` when the document prints gross prices |
 | Quantity in base units | `quantity` x unit factor (KGM = 1,000 g), or x `base_qty_per_unit` for cartons and crates |
-| Price per base unit | net line amount / quantity in base units |
+| Price per base unit | net line amount / quantity in base units (view `v_ingredient_prices`) |
 | Dish cost | sum over items of `quantity / (1 - waste_pct / 100)` x latest price per base unit |
 | Food-cost % | dish cost / net menu price, net = `menu_price_gross / (1 + vat_rate / 100)` |
 | Gross margin per dish | net menu price - dish cost |

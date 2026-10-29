@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     ocr_engine: Literal["tesseract", "none"] = "tesseract"
     ocr_languages: str = "deu+eng"
 
+    # Step 6: matching invoice lines to ingredients. Embeddings come from the same Ollama server.
+    embedding_model: str = "qwen3-embedding:0.6b"
+
     @field_validator("database_url", "test_database_url")
     @classmethod
     def use_psycopg_driver(cls, value: str | None) -> str | None:

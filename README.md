@@ -7,7 +7,7 @@
 
 **A food-cost copilot for restaurants.** It reads supplier invoices (XRechnung and ZUGFeRD e-invoices, PDFs and phone photos of paper receipts), turns them into ingredient prices and shows what each dish really costs, and which dishes lose margin when prices go up.
 
-> 🚧 **Work in progress.** Steps 1–5 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model, measured on an evaluation set of 82 documents. See the [roadmap](#roadmap).
+> 🚧 **Work in progress.** Steps 1–6 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model; invoice lines are matched to ingredients, and a price history per kg, litre or piece builds up. See the [roadmap](#roadmap).
 
 ## Why
 
@@ -41,7 +41,7 @@ flowchart TB
 - [x] **Step 3 – Validation:** totals, VAT, units, dates and supplier tax IDs checked; clean e-invoices approved automatically, the rest goes to review (`wareneinsatz review`)
 - [x] **Step 4 – Evaluation set:** 82 labelled documents (synthetic invoices and receipts, phone-photo versions, official KoSIT invoices), field-level precision/recall/F1, rule-based baseline
 - [x] **Step 5 – PDFs and photos:** OCR + a local vision language model (Qwen3-VL 8B) into the same schema: F1 98.9 % on the 82-document evaluation set, 67 documents completely correct
-- [ ] **Step 6 – Ingredient matching** and price history per ingredient and supplier
+- [x] **Step 6 – Ingredient matching and price history:** memory of confirmed supplier products, fuzzy + embedding suggestions (93.9 % top-1 on held-out supplier texts), pack sizes from descriptions, net price per kg / l / piece
 - [ ] **Step 7 – Recipe costing and alerts:** food-cost %, gross margin, price jumps, monthly Wareneinsatz
 - [ ] **Step 8 – API and UI:** FastAPI backend; Streamlit upload, review screen and dashboard
 - [ ] **Step 9 – Deployment** on a cloud VM, and measured results in this README
@@ -155,6 +155,45 @@ flowchart LR
 - **Robust batch:** one transaction per document; if the model server is down the batch stops and
   nothing is lost; a photo of an invoice that already arrived as XML is caught as a duplicate.
 
+## Ingredients and prices (step 6)
+
+An invoice says "2 Krt Pommes Frites TK 10 mm, 4 x 2,5 kg" for 37.00 EUR. The kitchen needs
+"Pommes Frites: 1.85 EUR per kg". Step 6 connects the two.
+
+```bash
+uv run wareneinsatz ingredients load      # the master list: data/ingredients.json (54 ingredients)
+uv run wareneinsatz match                 # suggest an ingredient for every new invoice line
+uv run wareneinsatz confirm 2 --by Anant  # a person confirms once per supplier product
+uv run wareneinsatz prices                # net price per kg / l / piece, with the change since the last purchase
+```
+```
+     1  suggested hybrid    0.92  Rinderhackfleisch frisch, 20 % Fett      -> rinderhack             10000 g
+     4  suggested hybrid    0.95  Pommes Frites TK 10 mm, 4 x 2,5 kg       -> pommes                 20000 g
+     6  suggested hybrid    1.00  Cola 0,33 l Glas, Kiste 24 Fl.           -> cola                   15840 ml
+```
+
+- **Memory first.** A confirmed supplier product (supplier + article number, or the exact text)
+  is matched automatically next time. Over the 40 synthetic invoices, 122 of 314 lines needed a
+  confirmation and 192 came from memory.
+- **Suggestions from letters and meaning.** For new products: fuzzy text similarity (rapidfuzz)
+  plus sentence embeddings from a free local model (qwen3-embedding via Ollama), averaged.
+  On held-out supplier texts like "HAEHNCHENBRUST TK 4x2,5kg" or "Onion Rings Beer Batter":
+
+  | Method | Right ingredient first | Unknown products without a suggestion |
+  |---|---:|---:|
+  | Fuzzy (letters) | 87.8 % | 4 of 7 |
+  | Embeddings (meaning) | 93.9 % | 2 of 7 |
+  | Hybrid (both) | **93.9 %** | **6 of 7** |
+
+  Thresholds were chosen on the other half of the set. Every confirmation becomes an alias, so the
+  matcher learns the restaurant's suppliers.
+- **Pack sizes in code.** "4 x 2,5 kg" in a carton = 10,000 g; "0,33 l, 24 Fl." = 7.92 l; "20 %
+  Fett" and "10 mm" are ignored. All 162 amounts in the test set are right. If a sauce is sold in
+  kg but costed in ml, nothing is guessed: the reviewer enters the amount once.
+- **Prices you can trust.** A database view computes net prices (gross receipts divided by
+  1 + VAT) from approved invoices and confirmed lines only, so a correction changes the history
+  at once. Details: [eval/README.md](eval/README.md#ingredient-matching-step-6).
+
 ## Design decisions so far
 
 Details and reasons in [docs/decisions.md](docs/decisions.md).
@@ -169,7 +208,7 @@ Details and reasons in [docs/decisions.md](docs/decisions.md).
 
 ## Data model
 
-Suppliers, documents (uploaded files), invoices, VAT breakdown and invoice lines exist today; ingredients, supplier products, recipes and alerts follow in steps 6 and 7. Diagram and formulas: [docs/schema.md](docs/schema.md).
+Suppliers, documents (uploaded files), invoices, VAT breakdown, invoice lines, ingredients, the matching memory (supplier products) and a price view exist today; recipes and alerts follow in step 7. Diagram and formulas: [docs/schema.md](docs/schema.md).
 
 ## Run it locally
 
@@ -185,7 +224,7 @@ uv run pytest                        # unit tests + database tests
 
 Database tests run against a separate database (`wareneinsatz_test`) and are skipped when `TEST_DATABASE_URL` is empty.
 
-For step 5 (reading PDFs and photos), also install [Ollama](https://ollama.com/download) and Tesseract (macOS: `brew install tesseract tesseract-lang`), then `ollama pull qwen3-vl:8b-instruct`. About 16 GB of RAM are enough; `qwen3-vl:4b-instruct` is smaller and faster. Settings are in `.env.example`.
+For step 5 (reading PDFs and photos), also install [Ollama](https://ollama.com/download) and Tesseract (macOS: `brew install tesseract tesseract-lang`), then `ollama pull qwen3-vl:8b-instruct`. Step 6 uses `ollama pull qwen3-embedding:0.6b` (640 MB) and falls back to fuzzy matching without it. About 16 GB of RAM are enough; `qwen3-vl:4b-instruct` is smaller and faster. Settings are in `.env.example`.
 
 ## Project structure
 
@@ -195,14 +234,17 @@ For step 5 (reading PDFs and photos), also install [Ollama](https://ollama.com/d
 │   ├── validation.py     # business-rule checks (step 3)
 │   ├── units.py          # UN/ECE unit codes, printed units, conversion to g / ml / piece
 │   ├── reading/          # PDFs and photos: pages, OCR, language model client, interpretation (step 5)
+│   ├── matching/         # pack sizes, fuzzy + embedding matcher, memory, price history (step 6)
 │   ├── evaluation/       # evaluation set generator, scoring, extractors, harness (step 4)
-│   ├── cli.py            # `wareneinsatz ingest`, `extract`, `review`, `eval generate`, `eval run`
+│   ├── cli.py            # `wareneinsatz ingest`, `extract`, `review`, `eval ...`
+│   ├── cli_matching.py   # `ingredients`, `match`, `confirm`, `approve`, `prices`
 │   ├── schemas.py        # canonical invoice schema (pydantic)
 │   ├── models.py         # database tables (SQLAlchemy 2)
 │   ├── repository.py     # storing invoices, duplicate detection
 │   ├── config.py         # settings from environment variables / .env
 │   └── db.py             # engine and sessions
-├── migrations/           # Alembic migrations (0001 invoice tables, 0002/0003 findings from official samples)
+├── data/ingredients.json # ingredient master list of a burger restaurant (example)
+├── migrations/           # Alembic: 0001 invoice tables, 0002/0003 findings from official samples, 0004 matching
 ├── tests/                # pytest; samples/ has synthetic and official KoSIT test invoices
 ├── docs/                 # data model and design decisions
 ├── eval/                 # evaluation results (the generated dataset itself is not in git)
@@ -217,7 +259,7 @@ No real supplier or customer data is stored in this repository. Tests use synthe
 
 ## Tech stack
 
-Python 3.12 · pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · Ollama · Qwen3-VL · Tesseract OCR · httpx · defusedxml · pypdf · pypdfium2 · Pillow · python-stdnum · ReportLab · Docker Compose · pytest · ruff · uv · GitHub Actions
+Python 3.12 · pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · Ollama · Qwen3-VL · Qwen3-Embedding · rapidfuzz · Tesseract OCR · httpx · defusedxml · pypdf · pypdfium2 · Pillow · python-stdnum · ReportLab · Docker Compose · pytest · ruff · uv · GitHub Actions
 
 ## Author
 

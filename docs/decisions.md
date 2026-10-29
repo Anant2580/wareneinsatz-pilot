@@ -269,3 +269,56 @@ comparing it with what the reviewer approved.
 **Decision.** The metric treats H87, C62, EA and XPP as equal (all are "one piece" in
 `units.py`). The rule-based baseline was re-run: all-fields F1 76.5 % → 78.1 %, with "Box" added
 to the printed units at the same time.
+
+## 26. Match ingredients with a memory first, then letters and meaning
+
+*29 Oct 2026*
+
+**Context.** Suppliers name the same product differently ("Hähnchenbrustfilet 2,5 kg TK",
+"HAEHNCHENBRUST TK 4x2,5kg", "Chicken breast fillet"), and a wrong match puts a wrong price into
+every dish that uses the ingredient.
+
+**Decision.** A cascade: (1) the memory, supplier + article number or exact text, confirmed by a
+person once; (2) otherwise a suggestion from the average of a fuzzy score (rapidfuzz WRatio on
+the cleaned text) and an embedding score (cosine similarity, qwen3-embedding:0.6b via Ollama,
+free and local). Below a threshold there is no suggestion. Every confirmation also becomes an
+extra alias, so the matcher learns the restaurant's suppliers. Without Ollama, matching falls back
+to fuzzy only.
+
+**Consequences.** Only confirmed lines reach the price history, so its precision is that of the
+reviewer. On the test half of a hand-written set of 179 supplier texts, hybrid matching puts the
+right ingredient first in 93.9 % of cases (fuzzy alone 87.8 %, embeddings alone 93.9 %) and
+gives no suggestion for 6 of 7 products that are not on the master list (fuzzy: 4 of 7). Over the
+40 synthetic invoices, 122 of 314 lines needed a confirmation; the memory matched the other 192.
+
+## 27. Thresholds chosen on half the data, reported on the other half
+
+**Decision.** Every second item of the matching set is "dev", the others "test". Thresholds
+(fuzzy 0.68, embedding 0.76, hybrid 0.74) and the embedding model were chosen on dev only (of
+three free multilingual models, qwen3-embedding:0.6b tied for the most right decisions and is
+twice as fast as bge-m3); reports show the test half.
+
+**Consequences.** The published numbers are not tuned to the data they are measured on. The set is
+small and hand-written, which the README says.
+
+## 28. Pack sizes from the description, in code, with a way out
+
+**Decision.** `matching/packs.py` reads amounts per invoice unit from descriptions with rules:
+"4 x 2,5 kg", "0,33 l, 24 Fl.", "180 g, 40 Stk", "10er", ignoring fat percentages and dimensions
+("20 % Fett", "10 mm", "40 x 60 cm"). Weighed lines (kg, l) need no pack size. If the description
+gives the size in another kind of unit than the ingredient (a sauce in kg, the recipe in ml), the
+amount stays empty instead of guessing a density, and the reviewer enters it once with
+`--per-unit`; the memory keeps it.
+
+**Consequences.** All 162 amounts in the matching set are right. Lines without an amount are
+matched but don't produce a price until the amount is known.
+
+## 29. Prices come from a view over approved, confirmed lines
+
+**Decision.** `v_ingredient_prices` computes the net price per base unit in SQL: gross receipt
+prices divided by (1 + VAT rate), divided by the quantity in base units. Only approved invoices,
+confirmed lines, positive amounts and normal invoices (no credit notes) count. A reviewer
+approves an invoice with `wareneinsatz approve`.
+
+**Consequences.** Nothing to keep in sync: correcting a match or an amount changes the history
+immediately. Step 7 (recipe costing) reads prices from the same view.

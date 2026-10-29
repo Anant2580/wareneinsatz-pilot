@@ -1,0 +1,256 @@
+{
+  "created": "2026-10-29T17:22:36+00:00",
+  "version": "0.1.0",
+  "settings": {
+    "ingredients": 54,
+    "embedding_model": "ollama:qwen3-embedding:0.6b",
+    "thresholds": {
+      "fuzzy": 0.68,
+      "embedding": 0.76,
+      "hybrid": 0.74
+    }
+  },
+  "methods": [
+    {
+      "method": "fuzzy",
+      "threshold": 0.68,
+      "dev": {
+        "items": 90,
+        "known": 83,
+        "unknown": 7,
+        "top1_accuracy": 0.9397590361445783,
+        "suggestions": 83,
+        "precision": 0.9397590361445783,
+        "recall": 0.9397590361445783,
+        "unknown_without_suggestion": 0.8571428571428571
+      },
+      "test": {
+        "items": 89,
+        "known": 82,
+        "unknown": 7,
+        "top1_accuracy": 0.8780487804878049,
+        "suggestions": 82,
+        "precision": 0.8780487804878049,
+        "recall": 0.8780487804878049,
+        "unknown_without_suggestion": 0.5714285714285714
+      },
+      "all": {
+        "items": 179,
+        "known": 165,
+        "unknown": 14,
+        "top1_accuracy": 0.9090909090909091,
+        "suggestions": 165,
+        "precision": 0.9090909090909091,
+        "recall": 0.9090909090909091,
+        "unknown_without_suggestion": 0.7142857142857143
+      },
+      "test_misses": [
+        {
+          "description": "Beef Patties 180g tiefgekühlt 40 St.",
+          "expected": "patty-rind-180",
+          "best": "rinderhack",
+          "score": 0.855
+        },
+        {
+          "description": "RIND PATTY 180G 4X10ST",
+          "expected": "patty-rind-180",
+          "best": "rinderhack",
+          "score": 0.855
+        },
+        {
+          "description": "Hähnchen-Brustfilet ohne Haut, frisch",
+          "expected": "haehnchenbrust",
+          "best": "chicken-nuggets",
+          "score": 0.855
+        },
+        {
+          "description": "Vegetarische Burger Patties 24x120g",
+          "expected": "veggie-patty",
+          "best": "patty-rind-180",
+          "score": 0.855
+        },
+        {
+          "description": "Espresso ganze Bohne 1kg",
+          "expected": "kaffeebohnen",
+          "best": "sahne",
+          "score": 0.675
+        },
+        {
+          "description": "Cola zuckerfrei 24x0,33L",
+          "expected": "cola-zero",
+          "best": "zucker",
+          "score": 0.9
+        },
+        {
+          "description": "Pilsener 20 x 0,5 l Mehrweg",
+          "expected": "pils-flasche",
+          "best": "eier",
+          "score": 0.675
+        },
+        {
+          "description": "Orange Juice 12x0,2l",
+          "expected": "orangensaft",
+          "best": "cola-zero",
+          "score": 0.5714
+        },
+        {
+          "description": "Burger Box Zuckerrohr 4x50 Stk",
+          "expected": "burger-box",
+          "best": "zucker",
+          "score": 0.9
+        },
+        {
+          "description": "Dishwasher Tabs 100 pcs",
+          "expected": "spuelmaschinentabs",
+          "best": "mineralwasser",
+          "score": 0.75
+        }
+      ]
+    },
+    {
+      "method": "embedding",
+      "threshold": 0.76,
+      "dev": {
+        "items": 90,
+        "known": 83,
+        "unknown": 7,
+        "top1_accuracy": 0.9518072289156626,
+        "suggestions": 86,
+        "precision": 0.9069767441860465,
+        "recall": 0.9397590361445783,
+        "unknown_without_suggestion": 0.42857142857142855
+      },
+      "test": {
+        "items": 89,
+        "known": 82,
+        "unknown": 7,
+        "top1_accuracy": 0.9390243902439024,
+        "suggestions": 81,
+        "precision": 0.9259259259259259,
+        "recall": 0.9146341463414634,
+        "unknown_without_suggestion": 0.2857142857142857
+      },
+      "all": {
+        "items": 179,
+        "known": 165,
+        "unknown": 14,
+        "top1_accuracy": 0.9454545454545454,
+        "suggestions": 167,
+        "precision": 0.9161676646706587,
+        "recall": 0.9272727272727272,
+        "unknown_without_suggestion": 0.35714285714285715
+      },
+      "test_misses": [
+        {
+          "description": "Schlagrahm 30 % Fett 1000 ml",
+          "expected": "sahne",
+          "best": "frittierfett",
+          "score": 0.7582
+        },
+        {
+          "description": "Burger Pickles Gurkenscheiben 2,4 kg",
+          "expected": "gewuerzgurken",
+          "best": "burger-box",
+          "score": 0.7428
+        },
+        {
+          "description": "PILS KEG 30L",
+          "expected": "pils-fass",
+          "best": "pils-flasche",
+          "score": 0.8506
+        },
+        {
+          "description": "Orange Juice 12x0,2l",
+          "expected": "orangensaft",
+          "best": "pils-flasche",
+          "score": 0.7282
+        },
+        {
+          "description": "Papierservietten weiß 33x33 cm 1000 St.",
+          "expected": "servietten",
+          "best": "backpapier",
+          "score": 0.7066
+        }
+      ]
+    },
+    {
+      "method": "hybrid",
+      "threshold": 0.74,
+      "dev": {
+        "items": 90,
+        "known": 83,
+        "unknown": 7,
+        "top1_accuracy": 0.9879518072289156,
+        "suggestions": 83,
+        "precision": 0.9879518072289156,
+        "recall": 0.9879518072289156,
+        "unknown_without_suggestion": 0.8571428571428571
+      },
+      "test": {
+        "items": 89,
+        "known": 82,
+        "unknown": 7,
+        "top1_accuracy": 0.9390243902439024,
+        "suggestions": 79,
+        "precision": 0.9493670886075949,
+        "recall": 0.9146341463414634,
+        "unknown_without_suggestion": 0.8571428571428571
+      },
+      "all": {
+        "items": 179,
+        "known": 165,
+        "unknown": 14,
+        "top1_accuracy": 0.9636363636363636,
+        "suggestions": 162,
+        "precision": 0.9691358024691358,
+        "recall": 0.9515151515151515,
+        "unknown_without_suggestion": 0.8571428571428571
+      },
+      "test_misses": [
+        {
+          "description": "Cola zuckerfrei 24x0,33L",
+          "expected": "cola-zero",
+          "best": "zucker",
+          "score": 0.8955
+        },
+        {
+          "description": "PILS KEG 30L",
+          "expected": "pils-fass",
+          "best": "pils-flasche",
+          "score": 0.8528
+        },
+        {
+          "description": "Pilsener 20 x 0,5 l Mehrweg",
+          "expected": "pils-flasche",
+          "best": "eier",
+          "score": 0.7415
+        },
+        {
+          "description": "Orange Juice 12x0,2l",
+          "expected": "orangensaft",
+          "best": "sahne",
+          "score": 0.6439
+        },
+        {
+          "description": "Dishwasher Tabs 100 pcs",
+          "expected": "spuelmaschinentabs",
+          "best": "mineralwasser",
+          "score": 0.686
+        }
+      ]
+    }
+  ],
+  "packs": {
+    "items": 162,
+    "correct": 162,
+    "wrong": []
+  },
+  "memory": {
+    "invoices": 40,
+    "lines": 314,
+    "confirmations": 122,
+    "automatic": 192,
+    "right_suggestions": 117,
+    "no_suggestion": 0
+  }
+}

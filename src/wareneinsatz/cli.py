@@ -4,9 +4,11 @@ uv run wareneinsatz ingest invoice.xml           read one file
 uv run wareneinsatz ingest inbox/ --verbose      a folder (searched recursively), also showing warnings
 uv run wareneinsatz extract                      read stored PDFs and photos with OCR + a language model
 uv run wareneinsatz review                       invoices waiting for a person, with the reasons
+uv run wareneinsatz ingredients load / match / confirm / approve / prices    step 6, see cli_matching.py
 uv run wareneinsatz eval generate                build the evaluation set in eval/dataset
 uv run wareneinsatz eval run --extractor NAME    score an extractor, report in eval/results
 uv run wareneinsatz eval run --extractor llm-hybrid --model qwen3-vl:4b-instruct --only photo
+uv run wareneinsatz eval matching                ingredient matching accuracy
 uv run wareneinsatz --version
 """
 
@@ -21,7 +23,7 @@ from psycopg.errors import UndefinedTable
 from sqlalchemy import Engine, select
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from wareneinsatz import __version__
+from wareneinsatz import __version__, cli_matching
 from wareneinsatz.config import get_settings
 from wareneinsatz.db import make_engine, session_scope
 from wareneinsatz.ingest.pipeline import IngestResult, Outcome, extract_document, ingest_file
@@ -65,6 +67,7 @@ def main(argv: list[str] | None = None) -> int:
     extract.add_argument("-v", "--verbose", action="store_true", help="also list warnings")
 
     commands.add_parser("review", help="list invoices waiting for review, with the reasons")
+    cli_matching.add_commands(commands)
 
     evaluation = commands.add_parser("eval", help="evaluation set and accuracy measurement (step 4)")
     eval_commands = evaluation.add_subparsers(dest="eval_command", required=True)
@@ -85,6 +88,11 @@ def main(argv: list[str] | None = None) -> int:
     _add_reader_options(run, with_mode=False)  # the mode is part of the extractor name
     template = eval_commands.add_parser("template", help="create a truth file to fill in for your own receipt")
     template.add_argument("document", type=Path)
+    matching = eval_commands.add_parser("matching", help="ingredient matching accuracy (step 6)")
+    matching.add_argument("--embedding-model", help="Ollama embedding model (default from .env)")
+    matching.add_argument("--no-embeddings", action="store_true", help="fuzzy matching only")
+    matching.add_argument("--dataset", type=Path, default=Path("eval/dataset"), help="for the memory simulation")
+    matching.add_argument("--out", type=Path, default=Path("eval/results"))
 
     args = parser.parse_args(argv)
     if args.command == "ingest":
@@ -99,6 +107,9 @@ def main(argv: list[str] | None = None) -> int:
         return run_review()
     if args.command == "eval":
         return run_eval(args)
+    result = cli_matching.dispatch(args)
+    if result is not None:
+        return result
     return 2  # argparse already rejects unknown commands; kept for completeness
 
 
@@ -132,6 +143,8 @@ def run_eval(args: argparse.Namespace, out: TextIO | None = None) -> int:
     if args.eval_command == "template":
         print(f"Fill in {write_truth_template(args.document)} with what the document shows.", file=out)
         return 0
+    if args.eval_command == "matching":
+        return run_eval_matching(args, out)
 
     if not args.dataset.exists():
         print(f"No dataset in {args.dataset}. Create it with: uv run wareneinsatz eval generate", file=out)
@@ -163,6 +176,48 @@ def run_eval(args: argparse.Namespace, out: TextIO | None = None) -> int:
         f"would need review {docs['needs_review']}",
         file=out,
     )
+    print(f"Report: {markdown}", file=out)
+    return 0
+
+
+def run_eval_matching(args: argparse.Namespace, out: TextIO) -> int:
+    """Matching accuracy on the matching set, plus the memory simulation on the synthetic invoices."""
+    from wareneinsatz.evaluation.dataset import load_dataset
+    from wareneinsatz.evaluation.matching_eval import evaluate_matching, load_matching_set, write_matching_report
+    from wareneinsatz.matching.ingredients import read_ingredient_file, to_info
+
+    settings = get_settings()
+    if args.embedding_model:
+        settings = settings.model_copy(update={"embedding_model": args.embedding_model})
+    embedder = None if args.no_embeddings else cli_matching.make_embedder(settings, out)
+    items = load_matching_set()
+    invoices, truth = [], {}
+    if (args.dataset / "dataset.json").exists():  # the synthetic invoices, for the memory simulation
+        dataset = load_dataset(args.dataset)
+        names = {item.description: item.ingredient for item in items if item.ingredient}
+        for item in dataset.items:
+            if item.source == "synthetic" and item.kind == "pdf":
+                invoice = dataset.load_truth(args.dataset, item)
+                invoices.append(invoice)
+                for line in invoice.lines:  # synthetic lines use the catalogue names; deposit lines start with Pfand
+                    truth[line.description] = (
+                        "pfand" if line.description.startswith("Pfand ") else names[line.description]
+                    )
+    report = evaluate_matching(
+        to_info(read_ingredient_file()), items, embedder=embedder, invoices=invoices or None, truth=truth
+    )
+    markdown, _data = write_matching_report(report, args.out)
+    for method in report.methods:
+        t = method.splits["test"]
+        print(
+            f"{method.method:<10} test half: top-1 {_pct(t['top1_accuracy'])}  precision {_pct(t['precision'])}  "
+            f"recall {_pct(t['recall'])}  unknown without suggestion {_pct(t['unknown_without_suggestion'])}",
+            file=out,
+        )
+    print(f"pack sizes: {report.packs['correct']} of {report.packs['items']} right", file=out)
+    if report.memory:
+        m = report.memory
+        print(f"memory: {m['lines']} lines, {m['confirmations']} confirmations, {m['automatic']} automatic", file=out)
     print(f"Report: {markdown}", file=out)
     return 0
 

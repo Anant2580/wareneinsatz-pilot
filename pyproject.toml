@@ -20,6 +20,7 @@ dependencies = [
     "pypdf>=6.21",            # XML embedded in ZUGFeRD / Factur-X PDFs, PDF text layers
     "pypdfium2>=5.14",        # rendering PDF pages to images
     "python-stdnum>=2.2",     # check digits of VAT IDs and EAN/GTIN barcodes
+    "rapidfuzz>=3.14",
     "sqlalchemy>=2.1",        # ORM and SQL toolkit
 ]
 

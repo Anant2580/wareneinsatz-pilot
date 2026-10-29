@@ -138,3 +138,43 @@ uv run wareneinsatz eval run --extractor pdf-text-baseline --dataset data/privat
 
 Fill in the JSON with exactly what the receipt shows. A folder of `name.jpg` + `name.json` pairs
 is a dataset; no `dataset.json` is needed.
+
+## Ingredient matching (step 6)
+
+```bash
+uv run wareneinsatz eval matching          # needs Ollama with qwen3-embedding:0.6b; --no-embeddings for fuzzy only
+```
+
+**The matching set** (`src/wareneinsatz/evaluation/matching_set.json`): 179 hand-written invoice
+line texts, about three per ingredient, as different suppliers might print them: abbreviations,
+capitals, English, umlauts spelled out, pack sizes in many formats ("HAEHNCHENBRUST TK
+4x2,5kg", "Onion Rings Beer Batter 1kg", "Servietten 2lg. 40x40cm 6x250St"). 14 products are
+not on the master list (e.g. "Hähnchenkeulen", "Salatgurke"): there the right answer is no
+suggestion. Each item also has the correct amount per invoice unit in the ingredient's base unit.
+Every second item is "dev": thresholds and the embedding model were chosen there. The table shows
+the **test** half (89 items, 82 known, 7 unknown).
+
+| Method | Threshold | Right ingredient first (top-1) | Suggestions right (precision) | Known products with a right suggestion (recall) | Unknown without suggestion | Report |
+|---|---:|---:|---:|---:|---:|---|
+| fuzzy (rapidfuzz WRatio) | 0.68 | 87.8 % | 87.8 % | 87.8 % | 4 of 7 | [md](results/2026-10-29_matching_qwen3-embedding-0.6b.md) |
+| embedding (qwen3-embedding:0.6b) | 0.76 | 93.9 % | 92.6 % | 91.5 % | 2 of 7 | same |
+| hybrid (average of both) | 0.74 | **93.9 %** | **94.9 %** | 91.5 % | **6 of 7** | same |
+
+- **Hybrid is the default:** letters catch abbreviations and typos, meaning catches synonyms and
+  English ("Espresso ganze Bohne" -> Kaffeebohnen), and together they reject unknown products best.
+- **Where it fails:** close products that differ in one word ("Cola zuckerfrei" -> Zucker instead
+  of Cola Zero, "PILS KEG" -> bottled instead of draught beer). These are suggestions, so a
+  person still confirms; the memory then keeps the right answer.
+- On dev, three free multilingual embedding models were compared in hybrid mode. All three put
+  the right ingredient first for 98.8 %; counting the unknown products too, qwen3-embedding:0.6b
+  and bge-m3 decided 88 of 90 items right and embeddinggemma 87. qwen3-embedding is about twice
+  as fast as bge-m3, so it is the default.
+- **Pack sizes:** 162 of 162 amounts per invoice unit right (the rules were written alongside the
+  set, so this mainly shows that the formats in it are covered).
+- **Memory over time:** the 40 synthetic invoices in date order, each new supplier product
+  confirmed once: 314 lines, 122 confirmations, 192 matched automatically from memory. The
+  suggestion was right for 117 of the 122. (The generator draws random article numbers, so the
+  simulation remembers by text.)
+- Limits: a small, hand-written set for one restaurant type. Real supplier texts will show new
+  formats; the confirmed lines in the database (`match_method`, `match_score`) make it possible to
+  measure the accuracy on real invoices later.

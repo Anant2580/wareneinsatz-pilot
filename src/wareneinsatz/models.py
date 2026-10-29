@@ -1,8 +1,8 @@
 """Database tables (SQLAlchemy 2 ORM). The Alembic migrations in migrations/versions/ create them.
 
-Step 1 covers the invoice side: suppliers, documents (uploaded files), invoices,
-their VAT breakdown and invoice lines. Ingredients, recipes and alerts follow
-in later migrations (see docs/schema.md).
+Invoice side (steps 1-3): suppliers, documents (uploaded files), invoices, their VAT
+breakdown and invoice lines. Step 6: ingredients and the matching memory (supplier
+products). Recipes and alerts follow in step 7 (see docs/schema.md).
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Identity,
+    Index,
     Integer,
     MetaData,
     Numeric,
@@ -189,6 +190,15 @@ class InvoiceLine(Base):
         CheckConstraint("vat_rate IS NULL OR (vat_rate >= 0 AND vat_rate < 100)", name="vat_rate_range"),
         CheckConstraint("confidence IS NULL OR (confidence >= 0 AND confidence <= 1)", name="confidence_range"),
         CheckConstraint("gtin IS NULL OR gtin ~ '^([0-9]{8}|[0-9]{12,14})$'", name="gtin_format"),
+        CheckConstraint(
+            "match_status IS NULL OR match_status IN ('suggested', 'confirmed', 'no_match')", name="match_status"
+        ),
+        CheckConstraint(
+            "match_method IS NULL OR match_method IN ('memory', 'fuzzy', 'embedding', 'hybrid', 'manual')",
+            name="match_method",
+        ),
+        CheckConstraint("match_status <> 'confirmed' OR ingredient_id IS NOT NULL", name="confirmed_has_ingredient"),
+        CheckConstraint("base_quantity IS NULL OR base_quantity <> 0", name="base_quantity_not_zero"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -208,4 +218,72 @@ class InvoiceLine(Base):
     vat_rate: Mapped[Decimal | None] = mapped_column(RATE)
     confidence: Mapped[float | None] = mapped_column(Float)
 
+    # Step 6: which ingredient this line is, how it was found, and how much of it (in g, ml or pieces)
+    ingredient_id: Mapped[int | None] = mapped_column(ForeignKey("ingredients.id", ondelete="SET NULL"), index=True)
+    supplier_product_id: Mapped[int | None] = mapped_column(ForeignKey("supplier_products.id", ondelete="SET NULL"))
+    match_status: Mapped[str | None] = mapped_column(String(20))  # suggested, confirmed, no_match; NULL = not yet
+    match_method: Mapped[str | None] = mapped_column(String(20))  # memory, fuzzy, embedding, hybrid, manual
+    match_score: Mapped[float | None] = mapped_column(Float)
+    base_quantity: Mapped[Decimal | None] = mapped_column(QUANTITY)  # quantity x pack size, in the base unit
+
     invoice: Mapped[Invoice] = relationship(back_populates="lines")
+    ingredient: Mapped[Ingredient | None] = relationship()
+    supplier_product: Mapped[SupplierProduct | None] = relationship()
+
+
+class Ingredient(Base):
+    """An ingredient on the restaurant's master list (data/ingredients.json), priced per base unit."""
+
+    __tablename__ = "ingredients"
+    __table_args__ = (CheckConstraint("base_unit IN ('g', 'ml', 'piece')", name="base_unit"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    key: Mapped[str] = mapped_column(Text, unique=True)  # stable id for recipes, e.g. "patty-rind-180"
+    name: Mapped[str] = mapped_column(Text)
+    base_unit: Mapped[str] = mapped_column(String(10))  # prices are compared per g, ml or piece
+    category: Mapped[str | None] = mapped_column(Text)
+    is_food: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))  # false: Pfand, napkins, ...
+    aliases: Mapped[list[str]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SupplierProduct(Base):
+    """The matching memory: a supplier's product, confirmed by a person to be a certain ingredient.
+
+    Found again by article number or, if the supplier prints none, by the exact description.
+    base_qty_per_unit says how much of the ingredient one invoice unit holds (a carton of
+    "4 x 2,5 kg" = 10,000 g), read from the description or entered by the person.
+    """
+
+    __tablename__ = "supplier_products"
+    __table_args__ = (
+        Index(
+            "uq_supplier_products_supplier_article",
+            "supplier_id",
+            "article_no",
+            unique=True,
+            postgresql_where=text("article_no IS NOT NULL"),
+        ),
+        Index(
+            "uq_supplier_products_supplier_description",
+            "supplier_id",
+            "description_key",
+            unique=True,
+            postgresql_where=text("article_no IS NULL"),
+        ),
+        CheckConstraint("base_qty_per_unit IS NULL OR base_qty_per_unit > 0", name="base_qty_positive"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    supplier_id: Mapped[int] = mapped_column(ForeignKey("suppliers.id", ondelete="CASCADE"))
+    article_no: Mapped[str | None] = mapped_column(Text)
+    description_key: Mapped[str] = mapped_column(Text)  # description, case and spacing normalised
+    description: Mapped[str] = mapped_column(Text)  # as printed when it was confirmed
+    unit_code: Mapped[str | None] = mapped_column(Text)
+    ingredient_id: Mapped[int] = mapped_column(ForeignKey("ingredients.id", ondelete="RESTRICT"))
+    base_qty_per_unit: Mapped[Decimal | None] = mapped_column(QUANTITY)
+    confirmed_by: Mapped[str] = mapped_column(Text)
+    confirmed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    supplier: Mapped[Supplier] = relationship()
+    ingredient: Mapped[Ingredient] = relationship()
