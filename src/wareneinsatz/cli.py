@@ -5,6 +5,7 @@ uv run wareneinsatz ingest inbox/ --verbose      a folder (searched recursively)
 uv run wareneinsatz extract                      read stored PDFs and photos with OCR + a language model
 uv run wareneinsatz review                       invoices waiting for a person, with the reasons
 uv run wareneinsatz ingredients load / match / confirm / approve / prices    step 6, see cli_matching.py
+uv run wareneinsatz recipes load / cost / alerts / purchases / demo load     step 7, see cli_costing.py
 uv run wareneinsatz eval generate                build the evaluation set in eval/dataset
 uv run wareneinsatz eval run --extractor NAME    score an extractor, report in eval/results
 uv run wareneinsatz eval run --extractor llm-hybrid --model qwen3-vl:4b-instruct --only photo
@@ -23,7 +24,7 @@ from psycopg.errors import UndefinedTable
 from sqlalchemy import Engine, select
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from wareneinsatz import __version__, cli_matching
+from wareneinsatz import __version__, cli_costing, cli_matching
 from wareneinsatz.config import get_settings
 from wareneinsatz.db import make_engine, session_scope
 from wareneinsatz.ingest.pipeline import IngestResult, Outcome, extract_document, ingest_file
@@ -68,6 +69,7 @@ def main(argv: list[str] | None = None) -> int:
 
     commands.add_parser("review", help="list invoices waiting for review, with the reasons")
     cli_matching.add_commands(commands)
+    cli_costing.add_commands(commands)
 
     evaluation = commands.add_parser("eval", help="evaluation set and accuracy measurement (step 4)")
     eval_commands = evaluation.add_subparsers(dest="eval_command", required=True)
@@ -107,9 +109,10 @@ def main(argv: list[str] | None = None) -> int:
         return run_review()
     if args.command == "eval":
         return run_eval(args)
-    result = cli_matching.dispatch(args)
-    if result is not None:
-        return result
+    for module in (cli_matching, cli_costing):
+        result = module.dispatch(args)
+        if result is not None:
+            return result
     return 2  # argparse already rejects unknown commands; kept for completeness
 
 

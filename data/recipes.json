@@ -1,0 +1,85 @@
+{
+  "description": "Example menu of a fictional burger restaurant (prices and recipes invented). Dishes have a gross menu price and VAT rate (7 % for food in restaurants since 1 Jan 2026, 19 % for drinks); preparations (sauces, toppings) have a yield and are used by dishes. Quantities are per portion; waste_pct is the share lost in preparation (trimming, peeling).",
+  "recipes": [
+    {"key": "burger-sauce", "name": "Burger-Sauce (house)", "kind": "preparation", "yield_quantity": 1000, "yield_unit": "g", "items": [
+      {"ingredient": "mayonnaise", "quantity": 500, "unit": "ml"},
+      {"ingredient": "ketchup", "quantity": 250, "unit": "g"},
+      {"ingredient": "senf", "quantity": 60, "unit": "g"},
+      {"ingredient": "gewuerzgurken", "quantity": 150, "unit": "g"},
+      {"ingredient": "paprikapulver", "quantity": 10, "unit": "g"},
+      {"ingredient": "zucker", "quantity": 20, "unit": "g"}
+    ]},
+    {"key": "burger-topping", "name": "Salad topping (lettuce, tomato, onion)", "kind": "preparation", "yield_quantity": 1, "yield_unit": "piece", "items": [
+      {"ingredient": "eisbergsalat", "quantity": 0.06, "unit": "piece", "waste_pct": 20},
+      {"ingredient": "tomaten", "quantity": 30, "unit": "g", "waste_pct": 10},
+      {"ingredient": "rote-zwiebeln", "quantity": 15, "unit": "g", "waste_pct": 10}
+    ]},
+    {"key": "classic-burger", "name": "Classic Burger", "kind": "dish", "menu_price_gross": 11.90, "vat_rate": 7, "target_food_cost_pct": 30, "items": [
+      {"ingredient": "brioche-bun", "quantity": 1, "unit": "piece"},
+      {"ingredient": "patty-rind-180", "quantity": 1, "unit": "piece"},
+      {"recipe": "burger-topping", "quantity": 1, "unit": "piece"},
+      {"ingredient": "gewuerzgurken", "quantity": 15, "unit": "g"},
+      {"recipe": "burger-sauce", "quantity": 30, "unit": "g"}
+    ]},
+    {"key": "cheeseburger", "name": "Cheeseburger", "kind": "dish", "menu_price_gross": 12.90, "vat_rate": 7, "target_food_cost_pct": 30, "items": [
+      {"ingredient": "brioche-bun", "quantity": 1, "unit": "piece"},
+      {"ingredient": "patty-rind-180", "quantity": 1, "unit": "piece"},
+      {"ingredient": "cheddar", "quantity": 40, "unit": "g"},
+      {"recipe": "burger-topping", "quantity": 1, "unit": "piece"},
+      {"recipe": "burger-sauce", "quantity": 30, "unit": "g"}
+    ]},
+    {"key": "bacon-bbq-burger", "name": "Bacon BBQ Burger", "kind": "dish", "menu_price_gross": 14.50, "vat_rate": 7, "target_food_cost_pct": 30, "items": [
+      {"ingredient": "brioche-bun", "quantity": 1, "unit": "piece"},
+      {"ingredient": "patty-rind-180", "quantity": 1, "unit": "piece"},
+      {"ingredient": "cheddar", "quantity": 40, "unit": "g"},
+      {"ingredient": "bacon", "quantity": 40, "unit": "g"},
+      {"ingredient": "zwiebelringe", "quantity": 40, "unit": "g"},
+      {"ingredient": "bbq-sauce", "quantity": 30, "unit": "ml"}
+    ]},
+    {"key": "chicken-burger", "name": "Crispy Chicken Burger", "kind": "dish", "menu_price_gross": 12.90, "vat_rate": 7, "target_food_cost_pct": 30, "items": [
+      {"ingredient": "sesam-bun", "quantity": 1, "unit": "piece"},
+      {"ingredient": "haehnchenbrust", "quantity": 160, "unit": "g", "waste_pct": 5},
+      {"ingredient": "weizenmehl", "quantity": 20, "unit": "g"},
+      {"ingredient": "eier", "quantity": 0.25, "unit": "piece"},
+      {"recipe": "burger-topping", "quantity": 1, "unit": "piece"},
+      {"recipe": "burger-sauce", "quantity": 30, "unit": "g"}
+    ]},
+    {"key": "veggie-burger", "name": "Veggie Burger", "kind": "dish", "menu_price_gross": 12.50, "vat_rate": 7, "target_food_cost_pct": 30, "items": [
+      {"ingredient": "brioche-bun", "quantity": 1, "unit": "piece"},
+      {"ingredient": "veggie-patty", "quantity": 1, "unit": "piece"},
+      {"ingredient": "avocado", "quantity": 0.5, "unit": "piece", "waste_pct": 15},
+      {"recipe": "burger-topping", "quantity": 1, "unit": "piece"},
+      {"recipe": "burger-sauce", "quantity": 30, "unit": "g"}
+    ]},
+    {"key": "pulled-pork-burger", "name": "Pulled Pork Burger", "kind": "dish", "menu_price_gross": 13.90, "vat_rate": 7, "target_food_cost_pct": 30, "items": [
+      {"ingredient": "laugenbroetchen", "quantity": 1, "unit": "piece"},
+      {"ingredient": "pulled-pork", "quantity": 150, "unit": "g"},
+      {"ingredient": "bbq-sauce", "quantity": 30, "unit": "ml"},
+      {"ingredient": "jalapenos", "quantity": 15, "unit": "g"}
+    ]},
+    {"key": "pommes", "name": "Pommes Frites", "kind": "dish", "menu_price_gross": 4.50, "vat_rate": 7, "target_food_cost_pct": 25, "items": [
+      {"ingredient": "pommes", "quantity": 200, "unit": "g"},
+      {"ingredient": "rapsoel", "quantity": 15, "unit": "ml"},
+      {"ingredient": "salz", "quantity": 2, "unit": "g"}
+    ]},
+    {"key": "suesskartoffel-pommes", "name": "Süßkartoffel-Pommes", "kind": "dish", "menu_price_gross": 5.50, "vat_rate": 7, "target_food_cost_pct": 25, "items": [
+      {"ingredient": "suesskartoffel-pommes", "quantity": 200, "unit": "g"},
+      {"ingredient": "rapsoel", "quantity": 15, "unit": "ml"},
+      {"ingredient": "salz", "quantity": 2, "unit": "g"}
+    ]},
+    {"key": "chicken-nuggets", "name": "Chicken Nuggets (9 pieces)", "kind": "dish", "menu_price_gross": 7.90, "vat_rate": 7, "target_food_cost_pct": 28, "items": [
+      {"ingredient": "chicken-nuggets", "quantity": 180, "unit": "g"},
+      {"ingredient": "rapsoel", "quantity": 15, "unit": "ml"},
+      {"recipe": "burger-sauce", "quantity": 40, "unit": "g"}
+    ]},
+    {"key": "cola", "name": "Cola 0,33 l", "kind": "dish", "menu_price_gross": 3.90, "vat_rate": 19, "target_food_cost_pct": 25, "items": [
+      {"ingredient": "cola", "quantity": 330, "unit": "ml"}
+    ]},
+    {"key": "pils", "name": "Pils vom Fass 0,5 l", "kind": "dish", "menu_price_gross": 4.90, "vat_rate": 19, "target_food_cost_pct": 25, "items": [
+      {"ingredient": "pils-fass", "quantity": 500, "unit": "ml", "waste_pct": 5}
+    ]},
+    {"key": "apfelschorle", "name": "Apfelschorle 0,5 l", "kind": "dish", "menu_price_gross": 3.90, "vat_rate": 19, "target_food_cost_pct": 25, "items": [
+      {"ingredient": "apfelschorle", "quantity": 500, "unit": "ml"}
+    ]}
+  ]
+}

@@ -165,6 +165,9 @@ the **test** half (89 items, 82 known, 7 unknown).
 - **Where it fails:** close products that differ in one word ("Cola zuckerfrei" -> Zucker instead
   of Cola Zero, "PILS KEG" -> bottled instead of draught beer). These are suggestions, so a
   person still confirms; the memory then keeps the right answer.
+- On a MacBook Air M4 the same run gave identical hybrid and fuzzy numbers; embeddings alone
+  scored 91.5 % instead of 93.9 %, because the same model computes slightly different vectors
+  on a GPU. Hybrid, the default, was not affected.
 - On dev, three free multilingual embedding models were compared in hybrid mode. All three put
   the right ingredient first for 98.8 %; counting the unknown products too, qwen3-embedding:0.6b
   and bge-m3 decided 88 of 90 items right and embeddinggemma 87. qwen3-embedding is about twice

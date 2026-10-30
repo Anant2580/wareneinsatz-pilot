@@ -322,3 +322,49 @@ approves an invoice with `wareneinsatz approve`.
 
 **Consequences.** Nothing to keep in sync: correcting a match or an amount changes the history
 immediately. Step 7 (recipe costing) reads prices from the same view.
+
+## 30. Costing is pure code; the database only stores recipes and prices
+
+*30 Oct 2026*
+
+**Decision.** `costing.py` takes recipes and prices and returns costs, without touching the
+database. Formulas: cost = quantity ÷ (1 − waste %) × price per base unit; net price = gross ÷
+(1 + VAT); food-cost % = cost ÷ net price; margin = net price − cost. Preparations have a yield
+and are costed once, then reused by the dishes. Recipes are checked when loaded: unknown keys,
+units of the wrong kind (g for an ingredient counted in ml) and cycles are refused.
+
+**Consequences.** Every formula is tested against hand-worked numbers. The same function serves
+the CLI, step 8's API and "what if" questions (prices as of a date).
+
+## 31. Latest price by default, a missing price is never filled in
+
+**Decision.** A dish is costed with the latest purchase price of each ingredient, because that
+is what the next portion costs; a 90-day quantity-weighted average is available. An ingredient
+that has never been bought makes the dish incomplete: its cost and food-cost % stay empty and the
+missing ingredients are listed.
+
+**Consequences.** No invented number ever reaches a menu decision. With `--until` the menu can be
+costed as it was on any date, which shows the effect of a price change.
+
+## 32. Alerts are stored once and say what they mean for the menu
+
+**Decision.** Three rules: a price at least 10 % above the previous purchase at the same supplier
+(compared per supplier, so switching suppliers is not a "jump"), another supplier at least 5 %
+cheaper within 60 days, a dish above its food-cost target. A price jump lists the affected dishes
+and the extra cost per portion, computed from each dish's ingredient usage with preparations
+broken down and waste included. Deposits and non-food are left out. Each alert has a unique dedupe
+key, so the check can run after every import.
+
+**Consequences.** An owner reads "Classic Burger +0.22 EUR per portion", not just "patty +15 %".
+Thresholds are parameters; they will need tuning with real data.
+
+## 33. Generated demo data with a story, kept apart from real data
+
+**Decision.** `wareneinsatz demo load` stores 26 weeks of invoices from five fictional suppliers:
+fixed delivery weekdays, stable article numbers, prices drifting about 1 % a month, beef patties
++15 % from 14 September, a butcher about 6 % cheaper on meat. Seeded, so it is the same every time.
+Lines are confirmed with their correct ingredient, like a careful reviewer would.
+
+**Consequences.** Costing, alerts and the dashboard (step 8) can be shown and tested end to end
+without any real supplier or restaurant data. Demo documents are marked (`extraction_method =
+'demo'`) and must never be loaded into a real restaurant's database.

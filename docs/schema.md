@@ -137,13 +137,18 @@ Migration `0003` (step 3) added line discounts and surcharges (`allowance_amount
   line of an approved invoice, by date and supplier. Credit notes and returns are left out. It is a
   view, so it can never go stale.
 
-## Step 7: recipes and alerts (planned, migrations `0003`, `0004`)
+## Step 7: recipes and alerts (migration `0005`, exists)
 
-- `recipes`: dishes (with menu price and VAT rate: 7 % for food in restaurants since 1 Jan 2026,
-  19 % for drinks) and preparations such as a house sauce, which other recipes use.
-- `recipe_items`: an ingredient or a sub-recipe (exactly one of the two, enforced by a CHECK),
-  with quantity and waste percentage.
-- `alerts`: price jumps, dishes above their food-cost target, cheaper supplier available.
+- `recipes`: dishes (menu price, VAT rate: 7 % for food in restaurants since 1 Jan 2026, 19 % for
+  drinks, food-cost target) and preparations such as a house sauce, with a yield, which other
+  recipes use. A CHECK makes sure every dish has a price and a VAT rate.
+- `recipe_items`: an ingredient or a preparation (exactly one of the two, enforced by a CHECK),
+  with quantity, unit (g, kg, ml, cl, l, piece) and waste percentage.
+- `alerts`: price jumps, cheaper supplier available, dishes above their food-cost target.
+  `dedupe_key` is unique, so a finding is stored once; `acknowledged_at` / `_by` record who saw it.
+- View `v_purchase_lines`: every line of an approved invoice with its month, net amount (gross
+  receipts converted, credit notes negative) and, if confirmed, ingredient, category and
+  `is_food`. The monthly Wareneinsatz is the sum of its food lines.
 
 ## Calculations
 

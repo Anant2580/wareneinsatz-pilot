@@ -2,7 +2,7 @@
 
 Invoice side (steps 1-3): suppliers, documents (uploaded files), invoices, their VAT
 breakdown and invoice lines. Step 6: ingredients and the matching memory (supplier
-products). Recipes and alerts follow in step 7 (see docs/schema.md).
+products). Step 7: recipes, recipe items and alerts (see docs/schema.md).
 """
 
 from __future__ import annotations
@@ -287,3 +287,85 @@ class SupplierProduct(Base):
 
     supplier: Mapped[Supplier] = relationship()
     ingredient: Mapped[Ingredient] = relationship()
+
+
+class Recipe(Base):
+    """A dish on the menu or a preparation used by dishes (a house sauce, a salad topping)."""
+
+    __tablename__ = "recipes"
+    __table_args__ = (
+        CheckConstraint("kind IN ('dish', 'preparation')", name="kind"),
+        CheckConstraint("yield_unit IN ('g', 'ml', 'piece')", name="yield_unit"),
+        CheckConstraint("yield_quantity > 0", name="yield_positive"),
+        CheckConstraint(
+            "kind <> 'dish' OR (menu_price_gross IS NOT NULL AND vat_rate IS NOT NULL)", name="dish_has_price"
+        ),
+        CheckConstraint(
+            "target_food_cost_pct IS NULL OR (target_food_cost_pct > 0 AND target_food_cost_pct < 100)",
+            name="target_range",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    name: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(String(20))
+    menu_price_gross: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))  # dishes: price on the menu
+    vat_rate: Mapped[Decimal | None] = mapped_column(RATE)  # 7 for food, 19 for drinks
+    target_food_cost_pct: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    yield_quantity: Mapped[Decimal] = mapped_column(QUANTITY, server_default=text("1"))  # preparations: batch size
+    yield_unit: Mapped[str] = mapped_column(String(10), server_default="piece")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    items: Mapped[list[RecipeItem]] = relationship(
+        back_populates="recipe",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="RecipeItem.position",
+        foreign_keys="RecipeItem.recipe_id",
+    )
+
+
+class RecipeItem(Base):
+    """One ingredient or preparation in a recipe, per portion (or per batch for preparations)."""
+
+    __tablename__ = "recipe_items"
+    __table_args__ = (
+        UniqueConstraint("recipe_id", "position"),
+        CheckConstraint("(ingredient_id IS NULL) <> (sub_recipe_id IS NULL)", name="one_source"),
+        CheckConstraint("quantity > 0", name="quantity_positive"),
+        CheckConstraint("unit IN ('g', 'kg', 'ml', 'cl', 'l', 'piece')", name="unit"),
+        CheckConstraint("waste_pct >= 0 AND waste_pct < 100", name="waste_range"),
+        CheckConstraint("sub_recipe_id IS NULL OR sub_recipe_id <> recipe_id", name="not_itself"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id", ondelete="CASCADE"))
+    position: Mapped[int] = mapped_column(Integer)
+    ingredient_id: Mapped[int | None] = mapped_column(ForeignKey("ingredients.id", ondelete="RESTRICT"))
+    sub_recipe_id: Mapped[int | None] = mapped_column(ForeignKey("recipes.id", ondelete="RESTRICT"))
+    quantity: Mapped[Decimal] = mapped_column(QUANTITY)
+    unit: Mapped[str] = mapped_column(String(10))
+    waste_pct: Mapped[Decimal] = mapped_column(Numeric(5, 2), server_default=text("0"))
+
+    recipe: Mapped[Recipe] = relationship(back_populates="items", foreign_keys=[recipe_id])
+    ingredient: Mapped[Ingredient | None] = relationship()
+    sub_recipe: Mapped[Recipe | None] = relationship(foreign_keys=[sub_recipe_id])
+
+
+class Alert(Base):
+    """A price jump, a cheaper supplier or a dish above its food-cost target (step 7)."""
+
+    __tablename__ = "alerts"
+    __table_args__ = (CheckConstraint("kind IN ('price_jump', 'cheaper_supplier', 'over_target')", name="kind"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(30))
+    subject: Mapped[str] = mapped_column(Text)  # ingredient or recipe key
+    message: Mapped[str] = mapped_column(Text)
+    details: Mapped[dict[str, Any]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    dedupe_key: Mapped[str] = mapped_column(Text, unique=True)  # the same finding is stored once
+    happened_on: Mapped[date] = mapped_column(Date)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    acknowledged_by: Mapped[str | None] = mapped_column(Text)

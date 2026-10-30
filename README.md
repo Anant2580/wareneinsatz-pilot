@@ -7,7 +7,7 @@
 
 **A food-cost copilot for restaurants.** It reads supplier invoices (XRechnung and ZUGFeRD e-invoices, PDFs and phone photos of paper receipts), turns them into ingredient prices and shows what each dish really costs, and which dishes lose margin when prices go up.
 
-> 🚧 **Work in progress.** Steps 1–6 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model; invoice lines are matched to ingredients, and a price history per kg, litre or piece builds up. See the [roadmap](#roadmap).
+> 🚧 **Work in progress.** Steps 1–7 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model; invoice lines are matched to ingredients, a price history per kg, litre or piece builds up, and every dish is costed with alerts for price jumps. See the [roadmap](#roadmap).
 
 ## Why
 
@@ -42,7 +42,7 @@ flowchart TB
 - [x] **Step 4 – Evaluation set:** 82 labelled documents (synthetic invoices and receipts, phone-photo versions, official KoSIT invoices), field-level precision/recall/F1, rule-based baseline
 - [x] **Step 5 – PDFs and photos:** OCR + a local vision language model (Qwen3-VL 8B) into the same schema: F1 98.9 % on the 82-document evaluation set, 67 documents completely correct
 - [x] **Step 6 – Ingredient matching and price history:** memory of confirmed supplier products, fuzzy + embedding suggestions (93.9 % top-1 on held-out supplier texts), pack sizes from descriptions, net price per kg / l / piece
-- [ ] **Step 7 – Recipe costing and alerts:** food-cost %, gross margin, price jumps, monthly Wareneinsatz
+- [x] **Step 7 – Recipe costing and alerts:** dish cost with preparations and waste, food-cost %, gross margin, alerts for price jumps, cheaper suppliers and dishes over target, monthly Wareneinsatz
 - [ ] **Step 8 – API and UI:** FastAPI backend; Streamlit upload, review screen and dashboard
 - [ ] **Step 9 – Deployment** on a cloud VM, and measured results in this README
 
@@ -194,6 +194,57 @@ uv run wareneinsatz prices                # net price per kg / l / piece, with t
   1 + VAT) from approved invoices and confirmed lines only, so a correction changes the history
   at once. Details: [eval/README.md](eval/README.md#ingredient-matching-step-6).
 
+## Recipe costing and alerts (step 7)
+
+What does a Classic Burger cost today, and what did the beef price jump do to it?
+
+```bash
+uv run wareneinsatz recipes load          # menu and preparations: data/recipes.json (fictional burger menu)
+uv run wareneinsatz demo load             # 26 weeks of purchases from five fictional suppliers (for trying it out)
+uv run wareneinsatz cost                  # every dish: cost, food-cost %, margin
+uv run wareneinsatz cost classic-burger   # one dish, item by item
+uv run wareneinsatz alerts                # price jumps, cheaper suppliers, dishes over target
+uv run wareneinsatz purchases             # Wareneinsatz: net food purchases per month
+```
+```
+Dish                            Menu     Net    Cost  Food cost  Target  Margin
+Bacon BBQ Burger               14.50   13.55    3.51     25.9 %    30 %   10.04
+Classic Burger                 11.90   11.12    2.51     22.6 %    30 %    8.61
+Pils vom Fass 0,5 l             4.90    4.12    1.43     34.8 %    25 %    2.69  over target
+Pommes Frites                   4.50    4.21    0.42     10.1 %    25 %    3.78
+
+Classic Burger (dish)
+  Brioche-Bun                          1 piece                    0.48/piece    0.48 EUR
+  Burger-Patty Rind 180 g              1 piece                    1.70/piece    1.70 EUR
+  Salad topping (lettuce, tomato, onio 1 piece                    0.20/piece    0.20 EUR
+  Gewürzgurken                         15 g                          2.92/kg    0.04 EUR
+  Burger-Sauce (house)                 30 g                          2.93/kg    0.09 EUR
+  = cost 2.51 EUR · net price 11.12 EUR · food cost 22.6 % · margin 8.61 EUR
+
+#34   2026-09-29  price_jump       Burger-Patty Rind 180 g: 1.48 EUR/piece -> 1.70 EUR/piece (+15.1 %) at Musterfrisch Großhandel GmbH on 2026-09-29; per portion: Bacon BBQ Burger +0.22 EUR, Cheeseburger +0.22 EUR, Classic Burger +0.22 EUR
+#36   2026-10-27  cheaper_supplier Burger-Patty Rind 180 g: Fleischerei Beispiel e.K. sold it for 1.59 EUR/piece on 2026-10-23, 6.3 % less than the last purchase at Musterfrisch Großhandel GmbH (1.70 EUR/piece)
+```
+
+- **Costing formulas** (all in `costing.py`, each checked against hand-worked numbers in the tests):
+  dish cost = sum of quantity ÷ (1 − waste %) × price per base unit; net menu price = gross ÷
+  (1 + VAT), with 7 % for food in restaurants since 1 January 2026 and 19 % for drinks; food-cost %
+  = cost ÷ net price; gross margin = net price − cost.
+- **Preparations** (a house sauce, a salad topping) have a yield and are used by dishes: 30 g of a
+  sauce that makes 1,000 g costs 3 % of the batch. Cycles and unit mix-ups (g for an ingredient
+  counted in ml) are refused when the recipes are loaded.
+- **Prices:** the latest purchase by default, or a 90-day quantity-weighted average
+  (`--pricing average`). `--until 2026-09-01` shows the menu as it was: the Classic Burger cost
+  2.29 EUR before the beef price jump and 2.51 EUR after it.
+- **No guessing:** a dish with an ingredient that has never been bought is shown as incomplete,
+  with the missing ingredients listed.
+- **Alerts** are stored once (a dedupe key per finding) and can be marked as seen. A price jump
+  says which dishes it affects and by how much per portion. Deposits and non-food are left out.
+- **Wareneinsatz** per month: net food purchases from approved invoices, gross receipts converted,
+  credit notes subtracted, by category; lines not yet matched are shown separately.
+- **Demo data** is generated with a seed: five fictional suppliers on fixed weekdays, stable
+  article numbers, prices drifting about 1 % a month, beef patties +15 % from 14 September, and a
+  butcher who sells meat about 6 % cheaper than the wholesaler.
+
 ## Design decisions so far
 
 Details and reasons in [docs/decisions.md](docs/decisions.md).
@@ -208,7 +259,7 @@ Details and reasons in [docs/decisions.md](docs/decisions.md).
 
 ## Data model
 
-Suppliers, documents (uploaded files), invoices, VAT breakdown, invoice lines, ingredients, the matching memory (supplier products) and a price view exist today; recipes and alerts follow in step 7. Diagram and formulas: [docs/schema.md](docs/schema.md).
+Suppliers, documents (uploaded files), invoices, VAT breakdown, invoice lines, ingredients, the matching memory (supplier products), recipes, alerts and two views (prices, purchases). Diagram and formulas: [docs/schema.md](docs/schema.md).
 
 ## Run it locally
 
@@ -238,13 +289,16 @@ For step 5 (reading PDFs and photos), also install [Ollama](https://ollama.com/d
 │   ├── evaluation/       # evaluation set generator, scoring, extractors, harness (step 4)
 │   ├── cli.py            # `wareneinsatz ingest`, `extract`, `review`, `eval ...`
 │   ├── cli_matching.py   # `ingredients`, `match`, `confirm`, `approve`, `prices`
+│   ├── costing.py        # recipe costing: pure formulas (step 7)
+│   ├── pricing.py, recipes.py, alerts.py, demo.py   # prices, recipes in the database, alerts, demo data
+│   ├── cli_costing.py    # `recipes`, `cost`, `alerts`, `purchases`, `demo load`
 │   ├── schemas.py        # canonical invoice schema (pydantic)
 │   ├── models.py         # database tables (SQLAlchemy 2)
 │   ├── repository.py     # storing invoices, duplicate detection
 │   ├── config.py         # settings from environment variables / .env
 │   └── db.py             # engine and sessions
-├── data/ingredients.json # ingredient master list of a burger restaurant (example)
-├── migrations/           # Alembic: 0001 invoice tables, 0002/0003 findings from official samples, 0004 matching
+├── data/                 # ingredients.json and recipes.json: master list and menu of a fictional burger restaurant
+├── migrations/           # Alembic: 0001 invoice tables, 0002/0003 findings from official samples, 0004 matching, 0005 recipes and alerts
 ├── tests/                # pytest; samples/ has synthetic and official KoSIT test invoices
 ├── docs/                 # data model and design decisions
 ├── eval/                 # evaluation results (the generated dataset itself is not in git)
