@@ -28,6 +28,10 @@ class LlmError(Exception):
     """The server answered with an error or an unusable reply (this document failed)."""
 
 
+class LlmTimeout(LlmError):
+    """No answer in time: the machine is busy or slow. Worth trying again later; not the document's fault."""
+
+
 class LlmUnavailable(LlmError):
     """Server not reachable, model not installed or key rejected: stop instead of failing every document."""
 
@@ -201,6 +205,6 @@ def _post(http: httpx.Client, path: str, body: dict[str, Any], base_url: str, ti
     except httpx.ConnectTimeout as error:  # checked first: it is also a TimeoutException
         raise LlmUnavailable(f"The model server is not reachable at {base_url} ({error})") from error
     except httpx.TimeoutException as error:
-        raise LlmError(f"No answer within {timeout:.0f} s") from error
+        raise LlmTimeout(f"No answer within {timeout:.0f} s") from error
     except httpx.TransportError as error:
         raise LlmUnavailable(f"The model server is not reachable at {base_url} ({error})") from error

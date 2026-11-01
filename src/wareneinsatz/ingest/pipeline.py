@@ -26,7 +26,7 @@ from wareneinsatz.ingest.errors import ExtractionError, NeedsVisualExtraction
 from wareneinsatz.ingest.extract import EXACT_METHODS, extract_invoice
 from wareneinsatz.ingest.store import DocumentStore
 from wareneinsatz.models import Document
-from wareneinsatz.reading.llm import LlmError, LlmUnavailable
+from wareneinsatz.reading.llm import LlmError, LlmTimeout, LlmUnavailable
 from wareneinsatz.reading.reader import DocumentReader
 from wareneinsatz.repository import (
     DocumentMeta,
@@ -134,6 +134,10 @@ def extract_document(
         reading = reader.read(store.open(document.storage_path or ""))
     except LlmUnavailable:
         raise
+    except LlmTimeout as problem:  # a slow or busy machine: the document stays 'received' for the next run
+        return IngestResult(
+            document.filename, Outcome.NEEDS_OCR, f"{problem}; try again later", document_id=document.id
+        )
     except (ExtractionError, LlmError, OSError) as problem:  # OSError: the stored file is missing
         mark_document_failed(session, document, describe(problem), method=reader.method)
         return IngestResult(document.filename, Outcome.FAILED, describe(problem), document_id=document.id)

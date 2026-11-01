@@ -181,3 +181,19 @@ def test_extract_stops_when_the_model_server_is_gone(clean_database, tmp_path, f
     )
     assert "Stopped: Ollama is not reachable" in out.getvalue()
     assert _rows(clean_database, "SELECT status FROM documents") == [("received",)]  # tried again next time
+
+
+def test_extract_keeps_documents_after_a_timeout(clean_database, tmp_path, fake_llm):
+    from wareneinsatz.reading.llm import LlmTimeout
+
+    receipt = InvoiceGenerator(8).generate("receipt")
+    store = _store_photo(clean_database, tmp_path, photo_of(render_pdf(receipt.data, receipt.layout), seed=6))
+
+    class SlowLlm(fake_llm):
+        def complete(self, **request):
+            raise LlmTimeout("No answer within 600 s")
+
+    out = io.StringIO()
+    run_extract(engine=clean_database, store=store, reader=DocumentReader(SlowLlm("{}"), Mode.VISION), out=out)
+    assert "needs OCR  bon.jpg  No answer within 600 s; try again later" in out.getvalue()
+    assert _rows(clean_database, "SELECT status FROM documents") == [("received",)]

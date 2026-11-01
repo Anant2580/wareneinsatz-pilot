@@ -388,7 +388,9 @@ interactive documentation at `/docs` comes for free.
 **Decision.** `POST /extraction` starts reading all waiting scans and photos as a background
 task and returns at once (202); `GET /extraction` reports progress, outcomes and errors, and the
 upload page refreshes itself while it runs. Only one run at a time (a lock), and the job always
-finishes, even after an unexpected error, so it can be started again.
+finishes, even after an unexpected error, so it can be started again. A model that doesn't answer
+in time (a busy or slow machine) leaves the document waiting for the next run instead of marking
+it failed.
 
 **Consequences.** Uploads never wait for the language model (about a minute per page on a
 laptop). For several restaurants or workers this would become a real queue (e.g. a table with
