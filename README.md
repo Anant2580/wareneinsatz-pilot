@@ -7,7 +7,7 @@
 
 **A food-cost copilot for restaurants.** It reads supplier invoices (XRechnung and ZUGFeRD e-invoices, PDFs and phone photos of paper receipts), turns them into ingredient prices and shows what each dish really costs, and which dishes lose margin when prices go up.
 
-> 🚧 **Work in progress.** Steps 1–7 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model; invoice lines are matched to ingredients, a price history per kg, litre or piece builds up, and every dish is costed with alerts for price jumps. See the [roadmap](#roadmap).
+> 🚧 **Work in progress.** Steps 1–8 of 9 are done: XRechnung and ZUGFeRD invoices are read exactly, checked against business rules and approved or sent to review; PDFs and phone photos are read by OCR and a local, open-source vision language model; invoice lines are matched to ingredients, a price history per kg, litre or piece builds up, and every dish is costed with alerts for price jumps, all in a web app with a review screen and a dashboard. See the [roadmap](#roadmap).
 
 ## Why
 
@@ -15,7 +15,7 @@ Small restaurants work out their food cost (*Wareneinsatz*) by hand, if at all: 
 
 E-invoices make part of this machine-readable: every German business has had to be able to receive XRechnung/ZUGFeRD since 2025, and sending them becomes mandatory in 2027 and 2028 ([IHK Magdeburg](https://www.ihk.de/magdeburg/recht/allgemeine-rechtsauskuenfte-1/steuerrecht/e-rechnung-6318984)). Invoices under €250 stay exempt, though, so cash & carry receipts and small suppliers will keep arriving on paper, as PDFs or as photos for years. A useful tool has to handle both.
 
-## How it will work
+## How it works
 
 ```mermaid
 flowchart TB
@@ -43,7 +43,7 @@ flowchart TB
 - [x] **Step 5 – PDFs and photos:** OCR + a local vision language model (Qwen3-VL 8B) into the same schema: F1 98.9 % on the 82-document evaluation set, 67 documents completely correct
 - [x] **Step 6 – Ingredient matching and price history:** memory of confirmed supplier products, fuzzy + embedding suggestions (93.9 % top-1 on held-out supplier texts), pack sizes from descriptions, net price per kg / l / piece
 - [x] **Step 7 – Recipe costing and alerts:** dish cost with preparations and waste, food-cost %, gross margin, alerts for price jumps, cheaper suppliers and dishes over target, monthly Wareneinsatz
-- [ ] **Step 8 – API and UI:** FastAPI backend; Streamlit upload, review screen and dashboard
+- [x] **Step 8 – API and web app:** FastAPI backend (upload, background extraction, review, matching, costing, alerts); Streamlit app with dashboard, upload, review screen, ingredient confirmation and menu costing
 - [ ] **Step 9 – Deployment** on a cloud VM, and measured results in this README
 
 ## Reading e-invoices (step 2)
@@ -245,6 +245,36 @@ Classic Burger (dish)
   article numbers, prices drifting about 1 % a month, beef patties +15 % from 14 September, and a
   butcher who sells meat about 6 % cheaper than the wholesaler.
 
+## Web app (step 8)
+
+```bash
+uv run wareneinsatz serve     # REST API on http://localhost:8000, interactive docs at /docs
+uv run wareneinsatz ui        # web app on http://localhost:8501 (in a second terminal)
+```
+
+![Dashboard](docs/images/dashboard.png)
+
+| Page | What it does |
+|---|---|
+| **Dashboard** | Wareneinsatz this month vs. last, invoices to review, open alerts, food purchases per month by category, food cost per dish, price history per ingredient and supplier |
+| **Upload** | E-invoices are read exactly at once; scans and photos are read in the background by OCR + the local language model, with a progress bar |
+| **Review** | The page next to the values and the validation findings; lines are edited in a table, then saved and checked again, approved or rejected |
+| **Ingredients** | Open suggestions with score and amount; pick or change the ingredient and confirm several at once |
+| **Menu costing** | Cost, food-cost % and margin per dish, item by item, with latest or average prices, as of any date |
+
+![Review screen](docs/images/review.png)
+
+- **API first.** The web app only talks to the REST API, never to the database. Each request is
+  one transaction; amounts travel as exact decimal strings. With `API_KEY` set in `.env`, every
+  request needs the header `X-API-Key` (for a server).
+- **Slow work in the background.** Reading a photo takes about a minute on a laptop, so uploads
+  return at once and the extraction runs as a background job with progress (`GET /extraction`).
+- **Both versions kept.** Corrections replace the invoice's values (who corrected it is stored);
+  the extractor's raw output stays on the document, so its accuracy on real invoices can be
+  measured later. Rejecting needs a reason; approving needs a date.
+- **Tested without a browser:** the API with FastAPI's TestClient and every page with
+  Streamlit's AppTest, both against the real test database.
+
 ## Design decisions so far
 
 Details and reasons in [docs/decisions.md](docs/decisions.md).
@@ -275,6 +305,8 @@ uv run pytest                        # unit tests + database tests
 
 Database tests run against a separate database (`wareneinsatz_test`) and are skipped when `TEST_DATABASE_URL` is empty.
 
+Then `uv run wareneinsatz serve` and, in a second terminal, `uv run wareneinsatz ui` (see [Web app](#web-app-step-8)). To try it with data: `uv run wareneinsatz ingredients load`, `recipes load` and `demo load`.
+
 For step 5 (reading PDFs and photos), also install [Ollama](https://ollama.com/download) and Tesseract (macOS: `brew install tesseract tesseract-lang`), then `ollama pull qwen3-vl:8b-instruct`. Step 6 uses `ollama pull qwen3-embedding:0.6b` (640 MB) and falls back to fuzzy matching without it. About 16 GB of RAM are enough; `qwen3-vl:4b-instruct` is smaller and faster. Settings are in `.env.example`.
 
 ## Project structure
@@ -292,13 +324,16 @@ For step 5 (reading PDFs and photos), also install [Ollama](https://ollama.com/d
 │   ├── costing.py        # recipe costing: pure formulas (step 7)
 │   ├── pricing.py, recipes.py, alerts.py, demo.py   # prices, recipes in the database, alerts, demo data
 │   ├── cli_costing.py    # `recipes`, `cost`, `alerts`, `purchases`, `demo load`
+│   ├── api/              # REST API (FastAPI), step 8
+│   ├── review.py         # correcting, approving and rejecting invoices
 │   ├── schemas.py        # canonical invoice schema (pydantic)
 │   ├── models.py         # database tables (SQLAlchemy 2)
 │   ├── repository.py     # storing invoices, duplicate detection
 │   ├── config.py         # settings from environment variables / .env
 │   └── db.py             # engine and sessions
+├── app/                  # web app (Streamlit): streamlit_app.py and webui/ (pages, API client)
 ├── data/                 # ingredients.json and recipes.json: master list and menu of a fictional burger restaurant
-├── migrations/           # Alembic: 0001 invoice tables, 0002/0003 findings from official samples, 0004 matching, 0005 recipes and alerts
+├── migrations/           # Alembic: 0001 invoice tables, 0002/0003 findings from official samples, 0004 matching, 0005 recipes and alerts, 0006 review
 ├── tests/                # pytest; samples/ has synthetic and official KoSIT test invoices
 ├── docs/                 # data model and design decisions
 ├── eval/                 # evaluation results (the generated dataset itself is not in git)
@@ -313,7 +348,7 @@ No real supplier or customer data is stored in this repository. Tests use synthe
 
 ## Tech stack
 
-Python 3.12 · pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · Ollama · Qwen3-VL · Qwen3-Embedding · rapidfuzz · Tesseract OCR · httpx · defusedxml · pypdf · pypdfium2 · Pillow · python-stdnum · ReportLab · Docker Compose · pytest · ruff · uv · GitHub Actions
+Python 3.12 · FastAPI · Streamlit · pydantic 2 · SQLAlchemy 2 · Alembic · PostgreSQL 16 · Ollama · Qwen3-VL · Qwen3-Embedding · rapidfuzz · Tesseract OCR · httpx · defusedxml · pypdf · pypdfium2 · Pillow · python-stdnum · ReportLab · Docker Compose · pytest · ruff · uv · GitHub Actions
 
 ## Author
 

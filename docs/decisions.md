@@ -368,3 +368,49 @@ Lines are confirmed with their correct ingredient, like a careful reviewer would
 **Consequences.** Costing, alerts and the dashboard (step 8) can be shown and tested end to end
 without any real supplier or restaurant data. Demo documents are marked (`extraction_method =
 'demo'`) and must never be loaded into a real restaurant's database.
+
+## 34. A REST API in front of everything, the web app only talks to it
+
+*2 Nov 2026*
+
+**Decision.** FastAPI serves every function (upload, extraction, review, matching, menu, prices,
+alerts, purchases); the Streamlit app calls it over HTTP and never opens the database. Each
+request is one transaction, committed when the handler returns. Decimals travel as strings.
+An optional API key (header `X-API-Key`, compared in constant time) protects it on a server;
+`/health` stays open for monitoring.
+
+**Consequences.** Another front end (a phone app, a scheduled import) can use the same API, and
+the API is tested without a browser (FastAPI's TestClient against the test database). The
+interactive documentation at `/docs` comes for free.
+
+## 35. Slow work runs in the background, one job at a time
+
+**Decision.** `POST /extraction` starts reading all waiting scans and photos as a background
+task and returns at once (202); `GET /extraction` reports progress, outcomes and errors, and the
+upload page refreshes itself while it runs. Only one run at a time (a lock), and the job always
+finishes, even after an unexpected error, so it can be started again.
+
+**Consequences.** Uploads never wait for the language model (about a minute per page on a
+laptop). For several restaurants or workers this would become a real queue (e.g. a table with
+`FOR UPDATE SKIP LOCKED`); for one restaurant a background task is enough.
+
+## 36. Review keeps both versions: what was read and what was approved
+
+**Decision.** The review screen shows the page next to the values. Corrections replace the
+invoice's values (`PUT /invoices/{id}`, recorded in `corrected_by` / `corrected_at`, migration
+`0006`) and run the checks again; the document's `raw_extraction` keeps the extractor's output.
+Approve needs a date; reject needs a reason. Corrected lines lose their ingredient match and are
+matched again.
+
+**Consequences.** The accuracy on real invoices can be measured later by comparing raw output
+with approved values, per field, exactly like the evaluation set.
+
+## 37. Streamlit for the web app
+
+**Decision.** Five pages (dashboard, upload, review, ingredients, menu) in Streamlit, which is
+free, Python only, and has editable tables (`st.data_editor`) for correcting lines and
+confirming ingredients. Each page is a function, tested with Streamlit's AppTest against the
+real API and test database.
+
+**Consequences.** Fast to build and change, good enough for one restaurant. A public product
+would need its own front end and user accounts; the API already separates the two.

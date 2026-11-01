@@ -50,6 +50,11 @@ class Settings(BaseSettings):
     # Step 6: matching invoice lines to ingredients. Embeddings come from the same Ollama server.
     embedding_model: str = "qwen3-embedding:0.6b"
 
+    # Step 8: API and web app.
+    api_key: SecretStr | None = None  # if set, the API needs the header X-API-Key (set it on a server)
+    api_url: str = "http://localhost:8000"  # where the web app finds the API
+    max_upload_mb: int = 20
+
     @field_validator("database_url", "test_database_url")
     @classmethod
     def use_psycopg_driver(cls, value: str | None) -> str | None:

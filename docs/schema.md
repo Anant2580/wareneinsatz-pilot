@@ -120,6 +120,9 @@ erDiagram
 Migration `0002` (step 2) widened `unit_price` to NUMERIC(20,10) and allowed negative allowance and charge totals, after the official test invoices showed both.
 Migration `0003` (step 3) added line discounts and surcharges (`allowance_amount`, `charge_amount`) and `approved_by` ('auto' or the reviewer); `review_issues` holds the validation findings.
 
+Migration `0006` (step 8) added `corrected_by` / `corrected_at` (a reviewer changed values; the
+document's `raw_extraction` keeps what was read) and `rejected_reason`, required for rejected invoices.
+
 ## Step 6: matching and prices (migration `0004`, exists)
 
 - `ingredients`: the kitchen's master list (`data/ingredients.json`) with one base unit each

@@ -11,6 +11,7 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.20",          # database migrations
     "defusedxml>=0.7",        # safe XML parsing (no external entities, no entity bombs)
+    "fastapi>=0.120",         # REST API (step 8)
     "httpx>=0.28",            # HTTP client for the language model server (step 5)
     "pillow>=13.0",           # images: photos, OCR clean-up, images for the model
     "pillow-heif>=1.1",       # iPhone photos (HEIC)
@@ -19,9 +20,11 @@ dependencies = [
     "pydantic-settings>=2.16", # configuration from environment variables / .env
     "pypdf>=6.21",            # XML embedded in ZUGFeRD / Factur-X PDFs, PDF text layers
     "pypdfium2>=5.14",        # rendering PDF pages to images
+    "python-multipart>=0.0.20", # file uploads in the API
     "python-stdnum>=2.2",     # check digits of VAT IDs and EAN/GTIN barcodes
-    "rapidfuzz>=3.14",
+    "rapidfuzz>=3.14",        # fuzzy text matching of ingredients (step 6)
     "sqlalchemy>=2.1",        # ORM and SQL toolkit
+    "uvicorn>=0.38",          # web server for the API
 ]
 
 [project.scripts]
@@ -33,6 +36,13 @@ dev = [
     "reportlab>=5.1",         # evaluation set: generating invoice PDFs
     "ruff>=0.17",
 ]
+ui = [
+    "streamlit>=1.50",        # web app: upload, review, dashboard (step 8)
+]
+
+[tool.uv]
+# uv sync installs the web app too; a server running only the API can use --no-group ui
+default-groups = ["dev", "ui"]
 
 [build-system]
 requires = ["hatchling>=1.32"]
@@ -44,6 +54,7 @@ packages = ["src/wareneinsatz"]
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+src = ["src", "app"]  # first-party code, for import sorting
 
 [tool.ruff.lint]
 # pycodestyle, pyflakes, bugbear, import sorting, pyupgrade, simplify
@@ -54,3 +65,7 @@ testpaths = ["tests"]
 # Import the code straight from src/, so tests never depend on how the package was installed
 pythonpath = ["src"]
 addopts = "-ra"
+filterwarnings = [
+    # Starlette asks for a newer HTTP client in its TestClient; the tests are unaffected
+    "ignore:Using `httpx` with `starlette.testclient`",
+]

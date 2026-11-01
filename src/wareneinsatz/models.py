@@ -123,6 +123,7 @@ class Invoice(Base):
             "status <> 'approved' OR (issue_date IS NOT NULL AND approved_at IS NOT NULL AND approved_by IS NOT NULL)",
             name="approved_has_date",
         ),
+        CheckConstraint("status <> 'rejected' OR rejected_reason IS NOT NULL", name="rejected_has_reason"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -145,6 +146,10 @@ class Invoice(Base):
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # 'auto' when the validation step approved it, otherwise the reviewer's name (review screen, step 8).
     approved_by: Mapped[str | None] = mapped_column(Text)
+    # Step 8 review screen: who corrected values (the document's raw_extraction keeps what was read), why rejected.
+    corrected_by: Mapped[str | None] = mapped_column(Text)
+    corrected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rejected_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     document: Mapped[Document] = relationship(back_populates="invoice")

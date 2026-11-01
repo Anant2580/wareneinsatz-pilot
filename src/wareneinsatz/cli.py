@@ -10,6 +10,8 @@ uv run wareneinsatz eval generate                build the evaluation set in eva
 uv run wareneinsatz eval run --extractor NAME    score an extractor, report in eval/results
 uv run wareneinsatz eval run --extractor llm-hybrid --model qwen3-vl:4b-instruct --only photo
 uv run wareneinsatz eval matching                ingredient matching accuracy
+uv run wareneinsatz serve                        the REST API on http://localhost:8000 (docs at /docs)
+uv run wareneinsatz ui                           the web app on http://localhost:8501 (needs the API)
 uv run wareneinsatz --version
 """
 
@@ -71,6 +73,13 @@ def main(argv: list[str] | None = None) -> int:
     cli_matching.add_commands(commands)
     cli_costing.add_commands(commands)
 
+    serve = commands.add_parser("serve", help="run the REST API (step 8)")
+    serve.add_argument("--host", default="127.0.0.1", help="0.0.0.0 to accept connections from other machines")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.add_argument("--reload", action="store_true", help="restart on code changes (development)")
+    ui = commands.add_parser("ui", help="run the web app (step 8); start `serve` first")
+    ui.add_argument("--port", type=int, default=8501)
+
     evaluation = commands.add_parser("eval", help="evaluation set and accuracy measurement (step 4)")
     eval_commands = evaluation.add_subparsers(dest="eval_command", required=True)
     generate = eval_commands.add_parser("generate", help="build the evaluation set (seeded, reproducible)")
@@ -109,11 +118,35 @@ def main(argv: list[str] | None = None) -> int:
         return run_review()
     if args.command == "eval":
         return run_eval(args)
+    if args.command == "serve":
+        return run_serve(args.host, args.port, reload=args.reload)
+    if args.command == "ui":
+        return run_ui(args.port)
     for module in (cli_matching, cli_costing):
         result = module.dispatch(args)
         if result is not None:
             return result
     return 2  # argparse already rejects unknown commands; kept for completeness
+
+
+def run_serve(host: str, port: int, *, reload: bool = False) -> int:
+    import uvicorn
+
+    uvicorn.run("wareneinsatz.api.app:create_app", factory=True, host=host, port=port, reload=reload)
+    return 0
+
+
+def run_ui(port: int) -> int:
+    """Start Streamlit with the web app in app/ (it talks to the API at API_URL)."""
+    import subprocess
+
+    script = Path(__file__).resolve().parents[2] / "app" / "streamlit_app.py"
+    if not script.exists():
+        print(f"The web app is not here: {script}", file=sys.stderr)
+        return 2
+    command = [sys.executable, "-m", "streamlit", "run", str(script), "--server.port", str(port),
+               "--browser.gatherUsageStats", "false", "--client.toolbarMode", "minimal"]  # fmt: skip
+    return subprocess.call(command)
 
 
 def _add_reader_options(parser: argparse.ArgumentParser, *, with_mode: bool = True) -> None:
