@@ -11,7 +11,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from webui import nav, style, theme
+from webui import nav, style, theme, views
 
 STATIC = Path(__file__).parent / "static"
 
@@ -23,6 +23,7 @@ page = st.navigation(nav.sections())  # pages grouped by the job they do
 with st.sidebar:
     st.text_input("Your name", key="reviewer", placeholder="Saved with reviews and approvals")
     decor = st.toggle("Food drawings in the background", value=True, key="decor")
+    views.demo_sidebar()  # only on the public demo: what it is, and the owner's sign-in
 
 style.apply(decor=decor)
 theme.switch()  # sun / moon at the top right; light by default

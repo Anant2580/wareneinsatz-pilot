@@ -48,3 +48,19 @@ jobs:
 
       - name: Test (schema, repository, migrations, OCR; the language model is replaced by a fake)
         run: uv run pytest -v
+
+  # The server image (step 9) must keep building; it is built for real on the server itself
+  docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the image and check that the app starts inside it
+        run: |
+          docker build -t wareneinsatz-pilot:ci .
+          docker run --rm wareneinsatz-pilot:ci wareneinsatz --version
+          docker compose -f deploy/compose.yml config --quiet
+        env:
+          POSTGRES_PASSWORD: ci
+          API_KEY: ci
+          UI_PASSWORD: ci

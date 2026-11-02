@@ -416,3 +416,29 @@ real API and test database.
 
 **Consequences.** Fast to build and change, good enough for one restaurant. A public product
 would need its own front end and user accounts; the API already separates the two.
+
+## 38. One server, one Caddy: a shared `edge` network for HTTPS
+
+**Decision.** The demo runs on the same free Oracle VM as the Berlin transit project, as its own
+Compose project (`deploy/compose.yml`, name `wareneinsatz`) with its own network and volumes.
+Only one program can hold ports 80 and 443, so the transit stack's Caddy serves both: it imports
+site files from `/opt/caddy-sites` and joins a Docker network `edge`. On `edge` sit only Caddy
+and the two web apps; the databases and the API are on their projects' own networks and have no
+published ports. HTTPS names come from sslip.io (`wareneinsatz.<ip>.sslip.io`), certificates from
+Let's Encrypt, both free.
+
+**Consequences.** No second VM, no paid domain, and neither project can reach the other's data.
+The cost is a small, documented coupling: the transit stack must be updated first, because it
+creates `edge` and the sites folder.
+
+## 39. A public demo that anyone can see but only the owner can change
+
+**Decision.** On the server, `API_PUBLIC_READ=true` lets GET requests through without the API
+key; every write still needs it. The web app holds the key only for a session whose user signed
+in with `UI_PASSWORD` (compared with `compare_digest`, one second delay after a wrong try);
+for everybody else every button that changes data is switched off. The data is the made-up demo
+(fictional suppliers and menu) plus one invoice with a misprint for the review screen. No
+language model runs on the server (one ARM core, no GPU): photos are read on a laptop.
+
+**Consequences.** Recruiters can click through everything without an account, and nobody can
+fill the server with uploads. A product for several restaurants would need real user accounts.

@@ -1,0 +1,14 @@
+# Keep the Docker build context small and free of secrets and local data
+.git
+.venv
+*.nosync
+.env
+deploy/.env
+**/__pycache__
+.pytest_cache
+.ruff_cache
+eval/dataset
+data/documents
+data/private
+docs/images
+tests

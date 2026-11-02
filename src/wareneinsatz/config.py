@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     api_url: str = "http://localhost:8000"  # where the web app finds the API
     max_upload_mb: int = 20
 
+    # Step 9: public demo on a server. Anyone may look (GET needs no key), only the owner may
+    # change data: the API wants the key for every write, the web app asks for UI_PASSWORD first.
+    api_public_read: bool = False
+    ui_password: SecretStr | None = None
+
     @field_validator("database_url", "test_database_url")
     @classmethod
     def use_psycopg_driver(cls, value: str | None) -> str | None:

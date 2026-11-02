@@ -108,3 +108,24 @@ def test_whole_app_has_the_theme_switch(api):
     switch = app.button(key="theme_toggle")
     assert switch.help == "Switch to dark mode"  # light by default
     assert any("stActiveTheme-" in str(element.proto) for element in app.get("html"))  # the script that stores it
+
+
+def test_public_demo_locks_changes_until_the_owner_signs_in(api, monkeypatch):
+    from wareneinsatz.config import Settings
+    from webui import client
+
+    monkeypatch.setattr(client, "get_settings", lambda: Settings(ui_password="owner-pw", api_key=None))
+    app = AppTest.from_file(str(ROOT / "app" / "streamlit_app.py"), default_timeout=30)
+    app.session_state["api"] = api
+    app.run()
+    assert "Public demo" in " ".join(c.value for c in app.sidebar.caption)
+
+    review = run_page(api, "review")
+    assert next(b for b in review.button if b.label == "Approve").disabled  # visitors can only look
+
+    app.sidebar.text_input[1].input("wrong")  # [0] is "Your name"
+    app.sidebar.button[-1].click().run()  # the form sends the password with the click
+    assert "signed_in" not in app.session_state
+    app.sidebar.text_input[1].input("owner-pw")
+    app.sidebar.button[-1].click().run()
+    assert app.session_state["signed_in"] is True

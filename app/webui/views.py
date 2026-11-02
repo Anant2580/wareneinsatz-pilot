@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from datetime import date
 from typing import Any
@@ -10,7 +11,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from webui.client import ApiError, api
+from webui.client import SIGN_IN_HINT, ApiError, api, can_write, demo_mode, sign_in
 from webui.style import opener, page_header
 
 # How each ingest outcome is shown: label, badge colour, Material icon.
@@ -66,6 +67,36 @@ def _go(name: str) -> None:
     from webui import nav  # imported here: nav imports this module
 
     nav.go(name)
+
+
+def _write(help_text: str | None = None) -> dict[str, Any]:
+    """Arguments for a control that changes data: switched off for signed-out visitors of the public demo."""
+    if can_write():
+        return {"help": help_text} if help_text else {}
+    return {"disabled": True, "help": SIGN_IN_HINT}
+
+
+def demo_sidebar() -> None:
+    """In the public demo: what this is, and the owner's sign-in."""
+    if not demo_mode():
+        return
+    st.divider()
+    if can_write():
+        st.caption("Signed in. You can upload, review and approve.")
+        if st.button("Sign out", icon=":material/logout:", type="tertiary"):
+            st.session_state.pop("signed_in", None)
+            st.session_state.pop("api", None)  # a fresh client without the key
+            st.rerun()
+        return
+    st.caption("Public demo with made-up invoices from a fictional burger grill. Look around freely; "
+               "changing data needs the owner's password.")  # fmt: skip
+    with st.form("sign-in", border=False):
+        password = st.text_input("Owner password", type="password")
+        if st.form_submit_button("Sign in", icon=":material/login:"):
+            if sign_in(password):
+                st.rerun()
+            time.sleep(1)  # slows down guessing
+            st.error("Wrong password")
 
 
 # --- dashboard ----------------------------------------------------------------------------------------
@@ -228,7 +259,7 @@ def _food_cost_chart(dishes: list[dict]) -> None:
 def _alerts_panel() -> None:
     head, action = st.columns([3, 2], vertical_alignment="bottom")
     head.subheader("Alerts")
-    if action.button("Check prices", icon=":material/refresh:", width="stretch"):
+    if action.button("Check prices", icon=":material/refresh:", width="stretch", **_write()):
         result = _safe(lambda: api().post("/alerts/check"))
         if result:
             st.toast(f"{result['new']} new alert(s)", icon=":material/notifications:")
@@ -244,7 +275,7 @@ def _alerts_panel() -> None:
                 text_col.badge(label, icon=icon, color=colour)
                 text_col.markdown(f"{alert['message']}  \n:gray[{date.fromisoformat(alert['happened_on']):%d %b %Y}]")
                 if button_col.button("", icon=":material/check:", key=f"ack-{alert['id']}", type="tertiary",
-                                     help="Mark as seen"):  # fmt: skip
+                                     **_write("Mark as seen")):  # fmt: skip
                     _safe(lambda alert=alert: api().post(f"/alerts/{alert['id']}/ack", {"by": reviewer()}))
                     st.rerun()
 
@@ -325,8 +356,9 @@ def upload() -> None:
             "Supplier invoices and till receipts",
             type=["xml", "pdf", "jpg", "jpeg", "png", "heic", "webp", "tif", "tiff"],
             accept_multiple_files=True,
+            **_write(),
         )
-        if files and st.button(f"Upload {len(files)} file(s)", type="primary", icon=":material/upload:"):
+        if files and st.button(f"Upload {len(files)} file(s)", type="primary", icon=":material/upload:", **_write()):
             payload = [("files", (f.name, f.getvalue(), f.type or "application/octet-stream")) for f in files]
             for result in _safe(lambda: api().post("/documents", files=payload), []):
                 with st.container(border=True):
@@ -352,7 +384,7 @@ def _extraction_panel() -> None:
     else:
         waiting = status["waiting"]
         st.markdown(f"**{waiting}** document(s) wait for OCR." if waiting else "Nothing waits for OCR.")
-        if waiting and st.button("Read them now", icon=":material/document_scanner:", type="primary"):
+        if waiting and st.button("Read them now", icon=":material/document_scanner:", type="primary", **_write()):
             _safe(lambda: api().post("/extraction"))
             st.rerun()
     if status["error"]:
@@ -468,7 +500,7 @@ def _review_form(detail: dict) -> None:
             pd.DataFrame(data["vat_breakdown"], columns=["vat_rate", "taxable_amount", "tax_amount"]),
             num_rows="dynamic", hide_index=True, key=f"vat-{detail['id']}", column_config=LINE_LABELS,
         )  # fmt: skip
-        saved = st.form_submit_button("Save and check again", icon=":material/save:")
+        saved = st.form_submit_button("Save and check again", icon=":material/save:", **_write())
     if saved:
         corrected = {
             **data,
@@ -489,8 +521,9 @@ def _review_form(detail: dict) -> None:
             st.rerun()
 
     with st.container(horizontal=True, gap="small"):
-        approve = st.button("Approve", type="primary", icon=":material/check:", key=f"approve-{detail['id']}")
-        with st.popover("Reject", icon=":material/close:"):
+        approve = st.button("Approve", type="primary", icon=":material/check:", key=f"approve-{detail['id']}",
+                            **_write())  # fmt: skip
+        with st.popover("Reject", icon=":material/close:", **_write()):
             reason = st.text_input("Why is it rejected?", key=f"reason-{detail['id']}")
             clicked = st.button("Reject invoice", key=f"reject-{detail['id']}", disabled=not reason)
     if approve and _safe(lambda: api().post(f"/invoices/{detail['id']}/approve", {"by": reviewer()})):
@@ -523,7 +556,7 @@ def matching() -> None:
     page_header("Ingredients", "Link invoice lines to your ingredients. Confirm a supplier's product once and it "
                 "is matched automatically from then on.")  # fmt: skip
     with st.container(horizontal=True, gap="medium", vertical_alignment="center"):
-        match = st.button("Match new lines", type="primary", icon=":material/join:")
+        match = st.button("Match new lines", type="primary", icon=":material/join:", **_write())
         use_embeddings = st.toggle("Use embeddings (Ollama)", value=True)
     if match:
         matched = _safe(lambda: api().post(f"/matching?embeddings={str(use_embeddings).lower()}"), [])
@@ -557,7 +590,8 @@ def matching() -> None:
         key="matching-editor",
     )
     chosen = edited[edited["confirm"]]
-    if st.button(f"Confirm {len(chosen)} line(s)", disabled=chosen.empty, icon=":material/done_all:"):
+    if st.button(f"Confirm {len(chosen)} line(s)", disabled=chosen.empty or not can_write(), icon=":material/done_all:",
+                 help=None if can_write() else SIGN_IN_HINT):  # fmt: skip
         done: set[int] = set()
         for row in chosen.to_dict("records"):
             if row["line"] in done or not row["ingredient"]:

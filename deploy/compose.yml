@@ -1,0 +1,98 @@
+# The server stack: PostgreSQL, the REST API and the web app (step 9).
+#
+# A Compose project of its own (name below) with its own network and volumes, so it never sees
+# the containers or data of other projects on the same server. Only the web app joins the
+# shared network "edge", where the server's Caddy picks it up for HTTPS. The database and the
+# API have no published ports: nothing but the web app can reach them.
+#
+#   sudo ./deploy/update.sh      # builds, starts and updates everything (see deploy/README.md)
+name: wareneinsatz
+
+x-app: &app
+  image: wareneinsatz-pilot:latest
+  pull_policy: never                    # built here (service "setup"), never downloaded
+  restart: unless-stopped
+  environment: &app-env
+    DATABASE_URL: postgresql+psycopg://wareneinsatz:${POSTGRES_PASSWORD:?set in deploy/.env}@db:5432/wareneinsatz
+    API_KEY: ${API_KEY:?set in deploy/.env}
+    TZ: Europe/Berlin
+  mem_limit: 768m
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wareneinsatz
+      POSTGRES_USER: wareneinsatz
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in deploy/.env}
+      TZ: Europe/Berlin
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wareneinsatz -d wareneinsatz"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 512m
+
+  # Migrations and demo data, then it exits (deploy/setup.sh)
+  setup:
+    <<: *app
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: "no"
+    command: ["sh", "deploy/setup.sh"]
+    volumes:
+      - documents:/app/data/documents
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    command: ["wareneinsatz", "serve", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      <<: *app-env
+      API_PUBLIC_READ: "true"           # visitors may look; every change needs the key
+      MAX_UPLOAD_MB: "10"
+    volumes:
+      - documents:/app/data/documents
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  ui:
+    <<: *app
+    command: ["wareneinsatz", "ui", "--port", "8501"]
+    environment:
+      <<: *app-env
+      API_URL: http://api:8000
+      UI_PASSWORD: ${UI_PASSWORD:?set in deploy/.env}   # the owner signs in with this to change data
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      default:
+      edge:
+        aliases: [wareneinsatz-ui]      # the name Caddy uses (deploy/wareneinsatz.caddy)
+
+networks:
+  edge:
+    external: true                      # created once by deploy/update.sh, shared with Caddy
+    name: edge
+
+volumes:
+  pgdata:
+  documents:

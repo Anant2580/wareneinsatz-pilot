@@ -35,7 +35,7 @@ def add_commands(commands: argparse._SubParsersAction) -> None:
     load.add_argument("file", nargs="?", type=Path, default=DEFAULT_RECIPES)
     sub.add_parser("list", help="show the recipes")
 
-    cost = commands.add_parser("cost", help="dish costs, food-cost % and margins with current prices")
+    cost = commands.add_parser("cost", help="dish costs, food-cost %% and margins with current prices")
     cost.add_argument("dish", nargs="?", help="a recipe key for the item-by-item breakdown")
     cost.add_argument("--pricing", choices=["latest", "average"], default="latest",
                       help="latest purchase (default) or 90-day average")  # fmt: skip

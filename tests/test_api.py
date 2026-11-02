@@ -209,3 +209,11 @@ def test_database_down(tmp_path):
     down = TestClient(create_app(engine=engine, store=DocumentStore(tmp_path), settings=Settings()))
     assert down.get("/health").json()["database"] == "unreachable"
     assert down.get("/summary").status_code == 503
+
+
+def test_public_demo_reads_without_key_but_writes_need_it(clean_database, tmp_path):
+    demo = TestClient(create_app(engine=clean_database, store=DocumentStore(tmp_path),
+                                 settings=Settings(api_key="s3cret", api_public_read=True)))  # fmt: skip
+    assert demo.get("/summary").status_code == 200  # anyone may look
+    assert demo.post("/alerts/check").status_code == 401  # nobody may change data without the key
+    assert demo.post("/alerts/check", headers={"X-API-Key": "s3cret"}).status_code == 200

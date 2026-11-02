@@ -1,5 +1,5 @@
 # Look of the web app (step 8). Streamlit reads this file when `uv run wareneinsatz ui` starts
-# in the repository folder. Light and dark follow the viewer's system setting.
+# in the repository folder. Light is the default; the sun / moon button switches to dark (app/webui/theme.py).
 #
 # Palette: kitchen back office. Cool paper, bay-leaf green for actions, saffron for things to
 # look at, tomato for food cost over target. Fonts come from Google Fonts (free).

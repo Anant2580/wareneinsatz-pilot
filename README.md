@@ -282,6 +282,23 @@ uv run wareneinsatz ui        # web app on http://localhost:8501 (in a second te
 - **Tested without a browser:** the API with FastAPI's TestClient and every page with
   Streamlit's AppTest, both against the real test database.
 
+## Public demo (step 9)
+
+The demo runs on a free Oracle Cloud VM (one ARM core, 6 GB) next to my
+[Berlin transit project](https://github.com/Anant2580/berlin-transit-delays), as its own Docker
+Compose stack: PostgreSQL, the API and the web app, set up and updated with one command
+(`sudo ./deploy/update.sh`, see [deploy/README.md](deploy/README.md)).
+
+- **Anyone can look, only the owner can change.** Reading needs no key; every write needs the
+  API key, which the web app uses only after the owner signs in. Visitors see every page with
+  made-up data from a fictional burger grill, including one invoice with a misprint on the
+  review screen.
+- **One Caddy for the whole server.** The transit stack's Caddy serves HTTPS for both projects
+  over a shared Docker network that only Caddy and the web apps join; the databases stay on
+  their own networks. Free certificates (Let's Encrypt) and a free name (sslip.io).
+- **No AI model on the server.** One ARM core without a GPU would take minutes per photo, so
+  photos are read on a laptop (step 5) and the server shows the results.
+
 ## Design decisions so far
 
 Details and reasons in [docs/decisions.md](docs/decisions.md).
@@ -339,13 +356,15 @@ For step 5 (reading PDFs and photos), also install [Ollama](https://ollama.com/d
 │   ├── config.py         # settings from environment variables / .env
 │   └── db.py             # engine and sessions
 ├── app/                  # web app (Streamlit): streamlit_app.py and webui/ (pages, API client)
-├── data/                 # ingredients.json and recipes.json: master list and menu of a fictional burger restaurant
+├── data/                 # ingredients.json and recipes.json (fictional burger restaurant), demo/ (invoice for the review screen)
 ├── migrations/           # Alembic: 0001 invoice tables, 0002/0003 findings from official samples, 0004 matching, 0005 recipes and alerts, 0006 review
 ├── tests/                # pytest; samples/ has synthetic and official KoSIT test invoices
 ├── docs/                 # data model and design decisions
 ├── eval/                 # evaluation results (the generated dataset itself is not in git)
 ├── db/init/              # creates the test database in the local container
 ├── docker-compose.yml    # local PostgreSQL 16
+├── Dockerfile            # one image for API, web app and setup job (server)
+├── deploy/               # server stack: compose.yml, setup.sh, update.sh, Caddy site (step 9)
 └── .github/workflows/    # CI: lint, format check, tests against PostgreSQL 16
 ```
 

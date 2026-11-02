@@ -146,7 +146,9 @@ def create_app(
         embedder_factory=embedder_factory or _default_embedder(settings),
     )
 
-    def check_key(x_api_key: Annotated[str | None, Header()] = None) -> None:
+    def check_key(request: Request, x_api_key: Annotated[str | None, Header()] = None) -> None:
+        if settings.api_public_read and request.method == "GET":
+            return  # public demo: reading is open, every change still needs the key
         expected = settings.api_key.get_secret_value() if settings.api_key else None
         # compare_digest takes the same time for every wrong key, so the key can't be guessed by timing
         if expected and not (x_api_key and secrets.compare_digest(x_api_key, expected)):

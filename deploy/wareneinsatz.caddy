@@ -1,0 +1,15 @@
+# Caddy site for the public demo. deploy/update.sh fills in __HOST__ and copies this file to
+# /opt/caddy-sites/, which the server's Caddy imports. Caddy gets the HTTPS certificate itself.
+__HOST__ {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	request_body {
+		max_size 12MB
+	}
+	reverse_proxy wareneinsatz-ui:8501
+}
