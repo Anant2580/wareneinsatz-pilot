@@ -266,7 +266,9 @@ uv run wareneinsatz ui        # web app on http://localhost:8501 (in a second te
 
 - **Look.** Colours and fonts are set in `.streamlit/config.toml` (light and dark mode follow the
   system setting); charts use Altair with the same palette. Fonts: Bricolage Grotesque and
-  Instrument Sans from Google Fonts.
+  Instrument Sans from Google Fonts. Faint line drawings of food drift in the background (own SVG
+  drawings, `app/webui/decor.py`); they stop moving with the system's reduced-motion setting and
+  can be switched off in the sidebar.
 
 - **API first.** The web app only talks to the REST API, never to the database. Each request is
   one transaction; amounts travel as exact decimal strings. With `API_KEY` set in `.env`, every

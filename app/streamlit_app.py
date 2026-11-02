@@ -17,11 +17,12 @@ STATIC = Path(__file__).parent / "static"
 
 st.set_page_config(page_title="Wareneinsatz-Pilot", page_icon=str(STATIC / "icon.svg"), layout="wide")
 st.logo(str(STATIC / "logo.svg"), icon_image=str(STATIC / "icon.svg"), size="large")
-style.apply()
-
 page = st.navigation(nav.sections())  # pages grouped by the job they do
 
 with st.sidebar:
     st.text_input("Your name", key="reviewer", placeholder="Saved with reviews and approvals")
+    decor = st.toggle("Food drawings in the background", value=True, key="decor")
+
+style.apply(decor=decor)
 
 page.run()

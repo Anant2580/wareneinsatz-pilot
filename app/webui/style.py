@@ -1,7 +1,8 @@
 """Small layout helpers and the few CSS rules the theme in .streamlit/config.toml cannot express.
 
 Colours and fonts live in config.toml, so light and dark mode both work; the CSS here only uses
-Streamlit's own CSS variables or `inherit`, never fixed colours.
+Streamlit's own CSS variables or `inherit`; the background drawings (decor.py) pick their colour from
+the active theme.
 """
 
 from __future__ import annotations
@@ -34,8 +35,14 @@ CSS = """
 """
 
 
-def apply() -> None:
+def apply(*, decor: bool = True) -> None:
+    """The page CSS, plus the floating food drawings in the background unless they are switched off."""
     st.html(CSS)
+    if decor:
+        from webui.decor import layer
+
+        theme = getattr(getattr(st.context, "theme", None), "type", None)
+        st.html(layer(dark=theme == "dark"))
 
 
 def page_header(title: str, lede: str) -> None:
