@@ -264,8 +264,9 @@ uv run wareneinsatz ui        # web app on http://localhost:8501 (in a second te
 
 ![Review screen](docs/images/review.png)
 
-- **Look.** Colours and fonts are set in `.streamlit/config.toml` (light and dark mode follow the
-  system setting); charts use Altair with the same palette. Fonts: Bricolage Grotesque and
+- **Look.** Colours and fonts are set in `.streamlit/config.toml`, with a light and a dark theme;
+  the sun / moon button at the top right switches between them (light by default,
+  `app/webui/theme.py`). Charts use Altair with the same palette. Fonts: Bricolage Grotesque and
   Instrument Sans from Google Fonts. Faint line drawings of food drift in the background (own SVG
   drawings, `app/webui/decor.py`); they stop moving with the system's reduced-motion setting and
   can be switched off in the sidebar.

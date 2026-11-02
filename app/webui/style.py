@@ -30,6 +30,16 @@ CSS = """
 }
 .wp-muted { opacity: 0.65; }
 
+/* Theme switch: a small round button at the top right, over the first line of the page. */
+.st-key-theme_bar { margin-bottom: -2.9rem; position: relative; z-index: 2; pointer-events: none; }
+.st-key-theme_bar button {
+  pointer-events: auto; width: 2.6rem; height: 2.6rem; padding: 0; border-radius: 50%;
+  border: 1px solid rgba(127, 127, 127, 0.35); background: rgba(127, 127, 127, 0.06);
+}
+.st-key-theme_bar button:hover { background: rgba(127, 127, 127, 0.16); }
+.st-key-theme_bar button [data-testid="stIconMaterial"] { font-size: 1.4rem !important; }
+.st-key-theme_script { display: none; }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 """

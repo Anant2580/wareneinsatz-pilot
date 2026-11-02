@@ -32,7 +32,7 @@ ICONS = {
 # Left values start at about 25 %, so nothing hides under the sidebar.
 PLACES = [
     ("burger", 76, 5, 150, -8, 26, 0),
-    ("beer", 95, 3, 92, 6, 20, -14),
+    ("beer", 90, 14, 88, 6, 20, -14),
     ("fries", 92, 36, 112, 10, 22, -6),
     ("onion", 64, 26, 72, 0, 18, -11),
     ("chili", 47, 44, 86, -20, 32, -5),

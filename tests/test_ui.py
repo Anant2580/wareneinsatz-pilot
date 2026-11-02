@@ -97,3 +97,14 @@ def test_menu_page(api):
     app = run_page(api, "menu")
     assert "Menu costing" in texts(app)
     assert [metric.label for metric in app.metric] == ["Cost", "Net price", "Food cost", "Margin"]
+
+
+def test_whole_app_has_the_theme_switch(api):
+    """The full app (navigation, sidebar, theme switch) starts light, with the sun button at the top."""
+    app = AppTest.from_file(str(ROOT / "app" / "streamlit_app.py"), default_timeout=30)
+    app.session_state["api"] = api
+    app.run()
+    assert not app.exception, app.exception
+    switch = app.button(key="theme_toggle")
+    assert switch.help == "Switch to dark mode"  # light by default
+    assert any("stActiveTheme-" in str(element.proto) for element in app.get("html"))  # the script that stores it
