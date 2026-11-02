@@ -42,9 +42,9 @@ ensure_secret POSTGRES_PASSWORD "$(openssl rand -hex 24)"
 ensure_secret API_KEY "$(openssl rand -hex 32)"
 if [ -z "$(get_env UI_PASSWORD)" ]; then
   set_env UI_PASSWORD "$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-16)"
-  echo "==> Your owner password for the web app (sign in to upload and approve):"
-  echo "      $(get_env UI_PASSWORD)"
-  echo "    It stays in deploy/.env on the server: sudo grep UI_PASSWORD deploy/.env"
+  # Not printed here, so it never ends up in a log; read it once with the command below
+  echo "==> Created your owner password for the web app. Show it with:"
+  echo "      sudo grep UI_PASSWORD $(pwd)/.env"
 fi
 
 if [ -z "$(get_env PUBLIC_HOST)" ]; then

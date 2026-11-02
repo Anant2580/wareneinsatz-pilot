@@ -19,8 +19,9 @@ sudo git clone https://github.com/Anant2580/wareneinsatz-pilot /opt/wareneinsatz
 cd /opt/wareneinsatz-pilot && sudo ./deploy/update.sh
 ```
 
-`update.sh` prints the owner password once (sign in on the web app to upload, review and
-approve) and the address, `https://wareneinsatz.<server-ip>.sslip.io`.
+`update.sh` creates the owner password (sign in on the web app to upload, review and approve;
+show it with `sudo grep UI_PASSWORD deploy/.env`) and prints the address,
+`https://wareneinsatz.<server-ip>.sslip.io`.
 
 ## Updates
 
