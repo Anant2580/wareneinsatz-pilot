@@ -75,7 +75,7 @@ def layer(dark: bool) -> str:
 
 def _data_uri(path: str, colour: str) -> str:
     svg = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="{colour}" fill-opacity="0.16" stroke="{colour}" '
-        f'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{path}"/></svg>'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="{colour}" fill-opacity="0.16" '
+        f'stroke="{colour}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{path}"/></svg>'
     )
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
