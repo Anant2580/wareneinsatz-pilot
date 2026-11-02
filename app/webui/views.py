@@ -179,7 +179,9 @@ def upload() -> None:
             text = f"**{result['filename']}**: {label} · {result['message']}"
             if result["outcome"] == "failed":
                 st.error(text)
-            elif result["outcome"] in ("approved", "duplicate"):
+            elif result["outcome"] == "duplicate":
+                st.info(text)  # not an error: the file is already in, nothing was added twice
+            elif result["outcome"] == "approved":
                 st.success(text)
             else:
                 st.warning(text)
@@ -209,7 +211,32 @@ def _extraction_panel() -> None:
         st.error(status["error"])
     elif status["finished_at"] and status["outcomes"]:
         done = ", ".join(f"{n} {OUTCOME_LABELS.get(k, k)}" for k, n in status["outcomes"].items())
-        st.success(f"Last run: {done}")
+        if status["outcomes"].get("failed"):
+            st.warning(f"Last run: {done}. The reasons are listed under 'Failed documents'.")
+        else:
+            st.success(f"Last run: {done}")
+    _failed_documents()
+
+
+def _failed_documents() -> None:
+    """Every document that could not become an invoice, with the reason, so nothing fails silently."""
+    failed = _safe(lambda: api().get("/documents", status="failed", limit=50), [])
+    if not failed:
+        return
+    with st.expander(f"Failed documents ({len(failed)})"):
+        st.dataframe(
+            [
+                {
+                    "File": d["filename"],
+                    "Received": d["received_at"][:16].replace("T", " "),
+                    "Read by": d["extraction_method"] or "-",
+                    "Reason": d["error"],
+                }
+                for d in failed
+            ],  # fmt: skip
+            hide_index=True,
+            width="stretch",
+        )
 
 
 # --- review ------------------------------------------------------------------------------------------

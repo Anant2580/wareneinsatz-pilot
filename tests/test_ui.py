@@ -41,6 +41,8 @@ def api(engine, tmp_path_factory, samples_dir=ROOT / "tests" / "samples"):
     wrong = xml.replace(b"<ram:LineTotalAmount>39.80</ram:LineTotalAmount>",
                         b"<ram:LineTotalAmount>39.90</ram:LineTotalAmount>")  # fmt: skip
     client.post("/documents", files=[("files", ("falsch.xml", wrong, "application/xml"))])
+    minimum = (samples_dir / "einvoices" / "musterfrisch_facturx_minimum.xml").read_bytes()
+    client.post("/documents", files=[("files", ("minimum.xml", minimum, "application/xml"))])  # fails: no lines
     client.post("/matching", params={"embeddings": False})
     yield Api(client=client)
     with engine.begin() as connection:
@@ -75,6 +77,8 @@ def test_dashboard(api):
 def test_upload_page(api):
     app = run_page(api, "upload")
     assert "Upload invoices" in texts(app)
+    assert app.expander[0].label == "Failed documents (1)"  # with the reason, so nothing fails silently
+    assert "upload the PDF version" in app.dataframe[0].value["Reason"][0]
 
 
 def test_review_page_shows_the_errors(api):

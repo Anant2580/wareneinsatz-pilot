@@ -96,6 +96,16 @@ def test_plain_pdf_waits_for_ocr(session, store, make_pdf):
     assert store.open(document.storage_path) == pdf  # kept for step 5
 
 
+def test_minimum_profile_pdf_waits_for_ocr_but_bare_xml_fails(session, store, make_pdf, samples):
+    """MINIMUM XML has no lines: inside a PDF the page can still be read, a bare XML has nothing to read."""
+    xml = (samples / "einvoices" / "musterfrisch_facturx_minimum.xml").read_bytes()
+    assert ingest_bytes(session, store, make_pdf({"factur-x.xml": xml}), "r.pdf").outcome is Outcome.NEEDS_OCR
+
+    bare = ingest_bytes(session, store, xml, "r.xml")
+    assert bare.outcome is Outcome.FAILED and "upload the PDF version" in bare.message
+    assert session.get(Document, bare.document_id).status == "failed"  # never queued for OCR
+
+
 def test_broken_file_is_recorded_as_failed(session, store):
     result = ingest_bytes(session, store, b"<rsm:CrossIndustryInvoice><unclosed>", "kaputt.xml")
 

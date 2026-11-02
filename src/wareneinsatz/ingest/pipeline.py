@@ -21,7 +21,7 @@ from pathlib import Path
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from wareneinsatz.ingest.detect import FileType, detect_file_type
+from wareneinsatz.ingest.detect import FileKind, FileType, detect_file_type
 from wareneinsatz.ingest.errors import ExtractionError, NeedsVisualExtraction
 from wareneinsatz.ingest.extract import EXACT_METHODS, extract_invoice
 from wareneinsatz.ingest.store import DocumentStore
@@ -83,6 +83,13 @@ def ingest_bytes(
     try:
         extraction = extract_invoice(content, file_type)
     except NeedsVisualExtraction as reason:
+        if file_type.kind is FileKind.XML:
+            # A bare XML file has no page to read: a ZUGFeRD MINIMUM / BASIC WL file without lines
+            # would wait for OCR forever and then fail. Say so now and ask for the PDF it came with.
+            reason = ExtractionError(f"{reason}. A bare XML has no page to read: upload the PDF version instead")
+            return _save_without_invoice(
+                session, store, content, file_type, DocumentMeta(**base), Outcome.FAILED, reason
+            )
         return _save_without_invoice(
             session, store, content, file_type, DocumentMeta(**base), Outcome.NEEDS_OCR, reason
         )
