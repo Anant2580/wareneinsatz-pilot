@@ -256,13 +256,17 @@ uv run wareneinsatz ui        # web app on http://localhost:8501 (in a second te
 
 | Page | What it does |
 |---|---|
-| **Dashboard** | Wareneinsatz this month vs. last, invoices to review, open alerts, food purchases per month by category, food cost per dish, price history per ingredient and supplier |
+| **Dashboard** | The month in one sentence (Wareneinsatz vs. the month before), buttons for what waits (reviews, OCR, ingredients, dishes over target), food cost per dish against its target, alerts, purchases per month by category, price history per ingredient and supplier |
 | **Upload** | E-invoices are read exactly at once; scans and photos are read in the background by OCR + the local language model, with a progress bar |
 | **Review** | The page next to the values and the validation findings; lines are edited in a table, then saved and checked again, approved or rejected |
 | **Ingredients** | Open suggestions with score and amount; pick or change the ingredient and confirm several at once |
 | **Menu costing** | Cost, food-cost % and margin per dish, item by item, with latest or average prices, as of any date |
 
 ![Review screen](docs/images/review.png)
+
+- **Look.** Colours and fonts are set in `.streamlit/config.toml` (light and dark mode follow the
+  system setting); charts use Altair with the same palette. Fonts: Bricolage Grotesque and
+  Instrument Sans from Google Fonts.
 
 - **API first.** The web app only talks to the REST API, never to the database. Each request is
   one transaction; amounts travel as exact decimal strings. With `API_KEY` set in `.env`, every

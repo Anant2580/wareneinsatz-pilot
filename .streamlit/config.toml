@@ -1,0 +1,61 @@
+# Look of the web app (step 8). Streamlit reads this file when `uv run wareneinsatz ui` starts
+# in the repository folder. Light and dark follow the viewer's system setting.
+#
+# Palette: kitchen back office. Cool paper, bay-leaf green for actions, saffron for things to
+# look at, tomato for food cost over target. Fonts come from Google Fonts (free).
+
+[theme]
+font = "Instrument Sans:https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap"
+headingFont = "Bricolage Grotesque:https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap"
+codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+headingFontWeights = [700, 650, 600, 600, 600, 600]
+headingFontSizes = ["2.6rem", "1.5rem", "1.15rem", "1rem", "0.95rem", "0.9rem"]
+baseFontSize = 15
+baseRadius = "0.6rem"
+buttonRadius = "full"
+metricValueFontWeight = 650
+showWidgetBorder = true
+showSidebarBorder = false
+
+[theme.light]
+primaryColor = "#2F6B4F"
+backgroundColor = "#F5F7F3"
+secondaryBackgroundColor = "#E8EDE6"
+textColor = "#1D2A26"
+borderColor = "#D5DDD3"
+dataframeHeaderBackgroundColor = "#EDF1EB"
+linkColor = "#2F6B4F"
+greenColor = "#2F6B4F"
+orangeColor = "#C98612"
+redColor = "#C2412D"
+blueColor = "#3F6585"
+# Food categories in the charts: green, saffron, slate blue, tomato, olive, plum, sand.
+chartCategoricalColors = ["#2F6B4F", "#D99A1E", "#4E6E8E", "#C2412D", "#8A9A5B", "#7A5C7E", "#B9A27A"]
+
+[theme.light.sidebar]
+backgroundColor = "#1F3B30"
+secondaryBackgroundColor = "#2A4A3D"
+textColor = "#E9F0EA"
+primaryColor = "#9FD3B4"
+borderColor = "#35574A"
+
+[theme.dark]
+primaryColor = "#6CBF94"
+backgroundColor = "#111815"
+secondaryBackgroundColor = "#1B2520"
+textColor = "#E4EBE6"
+borderColor = "#2C3A33"
+dataframeHeaderBackgroundColor = "#18211D"
+linkColor = "#8FD1AE"
+greenColor = "#6CBF94"
+orangeColor = "#E7B04A"
+redColor = "#E36A55"
+blueColor = "#7FA3C4"
+chartCategoricalColors = ["#6CBF94", "#E7B04A", "#7FA3C4", "#E36A55", "#AAB97A", "#A586A8", "#CDB98F"]
+
+[theme.dark.sidebar]
+backgroundColor = "#0B110E"
+secondaryBackgroundColor = "#16201B"
+textColor = "#DCE6DF"
+primaryColor = "#8FD1AE"
+borderColor = "#22302A"

@@ -68,10 +68,10 @@ def texts(app: AppTest) -> str:
 
 def test_dashboard(api):
     app = run_page(api, "dashboard")
-    labels = [metric.label for metric in app.metric]
-    assert labels[0].startswith("Wareneinsatz 2026-") and "Invoices to review" in labels
-    assert app.metric[1].value == "1"  # the faulty invoice
-    assert any("Classic Burger" in str(frame.value) for frame in app.dataframe)
+    assert "€ of food bought in October" in texts(app)  # the month as one sentence
+    labels = [button.label for button in app.button]
+    assert "1 invoice to review" in labels and "Check prices" in labels  # to-do buttons, then the alerts
+    assert app.get("vega_lite_chart")  # food cost per dish
 
 
 def test_upload_page(api):
@@ -95,4 +95,5 @@ def test_ingredients_page_lists_suggestions(api):
 
 def test_menu_page(api):
     app = run_page(api, "menu")
-    assert "food cost" in texts(app)
+    assert "Menu costing" in texts(app)
+    assert [metric.label for metric in app.metric] == ["Cost", "Net price", "Food cost", "Margin"]
