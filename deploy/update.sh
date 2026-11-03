@@ -15,7 +15,8 @@
 # Docker network "edge" and reads site files from /opt/caddy-sites).
 
 set -euo pipefail
-cd "$(dirname "$0")"   # deploy/
+script="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"   # absolute path, so the restart below finds it
+cd "$(dirname "$script")"   # deploy/
 
 get_env() { grep -E "^$1=" .env | tail -n 1 | cut -d= -f2- || true; }
 set_env() {
@@ -26,7 +27,7 @@ set_env() {
 if [ -z "${UPDATE_SH_REEXEC:-}" ]; then
   echo "==> Getting the latest code"
   git pull --ff-only
-  UPDATE_SH_REEXEC=1 exec "$0" "$@"
+  UPDATE_SH_REEXEC=1 exec "$script" "$@"
 fi
 
 touch .env
