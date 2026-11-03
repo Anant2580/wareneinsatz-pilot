@@ -146,9 +146,11 @@ def run_ui(port: int) -> int:
         return 2
     command = [sys.executable, "-m", "streamlit", "run", str(script), "--server.port", str(port),
                "--browser.gatherUsageStats", "false", "--client.toolbarMode", "minimal"]  # fmt: skip
-    return subprocess.call(
-        command, cwd=script.parents[1]
-    )  # the repo folder: Streamlit reads .streamlit/config.toml there
+    try:
+        # Run in the repo folder: Streamlit reads .streamlit/config.toml there
+        return subprocess.call(command, cwd=script.parents[1])
+    except KeyboardInterrupt:  # Ctrl+C stops Streamlit too; end quietly instead of printing a traceback
+        return 0
 
 
 def _add_reader_options(parser: argparse.ArgumentParser, *, with_mode: bool = True) -> None:
