@@ -230,7 +230,7 @@ def _food_cost_chart(dishes: list[dict]) -> None:
             axis=alt.Axis(ticks=False, domain=False, labelLimit=200, labelPadding=8),
         )  # fmt: skip
     )
-    top = max(0.5, float(frame["Label at"].max()) * 1.2)
+    top = max(0.5, float(frame["Label at"].max()) * 1.35)  # room for the % labels, also on a phone
     bars = base.mark_bar(height=16, cornerRadiusEnd=4).encode(
         x=alt.X(
             "Food cost:Q",
@@ -241,7 +241,7 @@ def _food_cost_chart(dishes: list[dict]) -> None:
         color=alt.Color(
             "Status:N",
             scale=alt.Scale(domain=["On target", "Over target"], range=[colours["ok"], colours["over"]]),
-            legend=alt.Legend(orient="top", title=None, symbolType="circle"),
+            legend=alt.Legend(orient="top-left", direction="horizontal", title=None, symbolType="circle"),
         ),  # fmt: skip
         tooltip=["Dish", alt.Tooltip("Food cost:Q", format=".1%"), alt.Tooltip("Target:Q", format=".0%"), "Cost"],
     )

@@ -44,7 +44,7 @@ flowchart TB
 - [x] **Step 6 – Ingredient matching and price history:** memory of confirmed supplier products, fuzzy + embedding suggestions (93.9 % top-1 on held-out supplier texts), pack sizes from descriptions, net price per kg / l / piece
 - [x] **Step 7 – Recipe costing and alerts:** dish cost with preparations and waste, food-cost %, gross margin, alerts for price jumps, cheaper suppliers and dishes over target, monthly Wareneinsatz
 - [x] **Step 8 – API and web app:** FastAPI backend (upload, background extraction, review, matching, costing, alerts); Streamlit app with dashboard, upload, review screen, ingredient confirmation and menu costing
-- [ ] **Step 9 – Deployment** on a cloud VM, and measured results in this README
+- [x] **Step 9 – Deployment:** public demo on a free Oracle Cloud VM behind HTTPS, read-only for visitors: **https://wareneinsatz.130-61-138-4.sslip.io**
 
 ## Reading e-invoices (step 2)
 
@@ -283,6 +283,8 @@ uv run wareneinsatz ui        # web app on http://localhost:8501 (in a second te
   Streamlit's AppTest, both against the real test database.
 
 ## Public demo (step 9)
+
+**Live: https://wareneinsatz.130-61-138-4.sslip.io** (made-up data; visitors can look around, changes need the owner's sign-in)
 
 The demo runs on a free Oracle Cloud VM (one ARM core, 6 GB) next to my
 [Berlin transit project](https://github.com/Anant2580/berlin-transit-delays), as its own Docker
